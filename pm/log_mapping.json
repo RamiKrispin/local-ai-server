@@ -1,0 +1,6 @@
+{
+  "schema_version": "1.0.0",
+  "mappings": {
+    "v0.1.0": "pm/v0_1_0/log.json"
+  }
+}
