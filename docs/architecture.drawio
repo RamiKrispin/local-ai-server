@@ -1,0 +1,230 @@
+<mxfile host="app.diagrams.net" modified="2026-06-07T00:00:00.000Z" agent="claude" version="24.0.0" type="device">
+  <diagram id="local-ai-server-arch" name="Local AI Server — Architecture">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Local AI Server — System Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=22;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1520" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="OpenAI-compatible HTTP API on Mac Studio · LAN-only · TLS · API-key auth · multi-backend routing" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=13;fontStyle=2;fontColor=#555555;" vertex="1" parent="1">
+          <mxGeometry x="40" y="58" width="1520" height="24" as="geometry" />
+        </mxCell>
+
+        <!-- LAN clients box -->
+        <mxCell id="lan_box" value="LAN Clients (192.168.x.x)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;verticalAlign=top;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="320" width="220" height="320" as="geometry" />
+        </mxCell>
+        <mxCell id="client_laptop" value="Laptop&#xa;(OpenAI SDK)" style="shape=mxgraph.cisco_safe.actors.user;html=1;strokeColor=#036897;fillColor=#036897;align=center;verticalLabelPosition=bottom;verticalAlign=top;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="100" y="380" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="client_phone" value="Phone / Tablet&#xa;(Open WebUI)" style="shape=mxgraph.cisco_safe.actors.user;html=1;strokeColor=#036897;fillColor=#036897;align=center;verticalLabelPosition=bottom;verticalAlign=top;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="100" y="490" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="client_dev" value="Dev tool&#xa;(Claude Code, etc.)" style="shape=mxgraph.cisco_safe.actors.user;html=1;strokeColor=#036897;fillColor=#036897;align=center;verticalLabelPosition=bottom;verticalAlign=top;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="180" y="435" width="40" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Mac Studio host -->
+        <mxCell id="host" value="Mac Studio (host) — Apple Silicon · macOS" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#444444;strokeWidth=2;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="320" y="100" width="1240" height="780" as="geometry" />
+        </mxCell>
+
+        <!-- Docker boundary inside host -->
+        <mxCell id="docker_net" value="Docker network: internal" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#e1f5fe;strokeColor=#1976d2;strokeWidth=1;fontSize=12;fontStyle=2;verticalAlign=top;align=left;spacingLeft=10;spacingTop=6;fontColor=#1976d2;" vertex="1" parent="1">
+          <mxGeometry x="360" y="160" width="780" height="280" as="geometry" />
+        </mxCell>
+
+        <!-- Caddy -->
+        <mxCell id="caddy" value="Caddy (container)&#xa;&#xa;• reverse proxy&#xa;• TLS internal (own CA)&#xa;• binds ${LAN_IP}:443&#xa;• flush_interval -1 (SSE)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;verticalAlign=top;align=center;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="400" y="220" width="220" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="caddy_port" value=":443 (HTTPS)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=2;fontColor=#1976d2;" vertex="1" parent="1">
+          <mxGeometry x="400" y="396" width="220" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Gateway -->
+        <mxCell id="gateway" value="FastAPI Gateway (container)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;verticalAlign=top;align=center;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="700" y="200" width="400" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="gw_auth" value="auth.py&#xa;Bearer + Argon2id" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="720" y="240" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gw_registry" value="registry.py&#xa;models.yaml + hot-reload" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="850" y="240" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gw_routers" value="routers/&#xa;chat · embeddings · models · health" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="980" y="240" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gw_adapters" value="adapters/  (BackendAdapter ABC)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;align=center;verticalAlign=top;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="720" y="305" width="360" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="adapter_ollama" value="OllamaAdapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="730" y="335" width="110" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="adapter_mlx" value="MLXAdapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="848" y="335" width="105" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="adapter_dmr" value="DockerModel-&#xa;RunnerAdapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="961" y="335" width="115" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Persistent stores attached to gateway -->
+        <mxCell id="keys_db" value="keys.db&#xa;(SQLite · Argon2id hashes)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="220" width="140" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="models_yaml" value="models.yaml&#xa;(model registry)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="320" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Host-native backends area -->
+        <mxCell id="native_box" value="Host-native processes (Apple Metal · GPU access)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff4e5;strokeColor=#d79b00;strokeWidth=1;fontSize=12;fontStyle=2;verticalAlign=top;align=left;spacingLeft=10;spacingTop=6;fontColor=#b35900;" vertex="1" parent="1">
+          <mxGeometry x="360" y="500" width="1160" height="320" as="geometry" />
+        </mxCell>
+
+        <!-- Ollama -->
+        <mxCell id="ollama" value="Ollama" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;fontStyle=1;verticalAlign=top;align=center;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="400" y="560" width="240" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="ollama_addr" value="host.docker.internal:11434" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=2;fontColor=#b35900;" vertex="1" parent="1">
+          <mxGeometry x="400" y="588" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="ollama_caps" value="✓ /v1/chat/completions&#xa;✓ /v1/embeddings&#xa;✓ /v1/models&#xa;✓ tool calls (model-dep.)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="420" y="618" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ollama_lifecycle" value="make start-ollama" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;fontFamily=Courier New;align=center;" vertex="1" parent="1">
+          <mxGeometry x="420" y="720" width="200" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- MLX -->
+        <mxCell id="mlx" value="mlx_lm.server (MLX)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;fontStyle=1;verticalAlign=top;align=center;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="680" y="560" width="240" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="mlx_addr" value="host.docker.internal:8080 (one per model)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=2;fontColor=#b35900;" vertex="1" parent="1">
+          <mxGeometry x="680" y="588" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="mlx_caps" value="✓ /v1/chat/completions&#xa;✗ /v1/embeddings → 501&#xa;~ tool calls (text in&#xa;     content, best-effort)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="700" y="618" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="mlx_lifecycle" value="make start-mlx MODEL=…" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;fontFamily=Courier New;align=center;" vertex="1" parent="1">
+          <mxGeometry x="700" y="720" width="200" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Docker Model Runner -->
+        <mxCell id="dmr" value="Docker Model Runner" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;fontStyle=1;verticalAlign=top;align=center;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="960" y="560" width="260" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="dmr_addr" value="model-runner.docker.internal/engines/v1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=2;fontColor=#b35900;" vertex="1" parent="1">
+          <mxGeometry x="960" y="588" width="260" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="dmr_caps" value="✓ /v1/chat/completions&#xa;✓ /v1/embeddings&#xa;✓ /v1/models&#xa;✓ tool calls (model-dep.)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="980" y="618" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="dmr_lifecycle" value="docker model pull ai/…" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;fontFamily=Courier New;align=center;" vertex="1" parent="1">
+          <mxGeometry x="980" y="720" width="220" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Edges: client -> caddy (HTTPS) -->
+        <mxCell id="e_client_caddy" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#0066cc;fontSize=11;fontStyle=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="lan_box" target="caddy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_client_caddy_lbl" value="HTTPS :443&#xa;Bearer sk-local-…" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;fontStyle=1;labelBackgroundColor=#ffffff;fontColor=#0066cc;" vertex="1" connectable="0" parent="e_client_caddy">
+          <mxGeometry x="-0.1" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Edges: caddy -> gateway -->
+        <mxCell id="e_caddy_gw" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#0066cc;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="caddy" target="gateway">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_caddy_gw_lbl" value="HTTP :8000&#xa;(internal net)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;labelBackgroundColor=#ffffff;fontColor=#0066cc;" vertex="1" connectable="0" parent="e_caddy_gw">
+          <mxGeometry x="0" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Edges: gateway -> stores -->
+        <mxCell id="e_gw_keys" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=1;strokeColor=#999999;dashed=1;fontSize=10;" edge="1" parent="1" source="gateway" target="keys_db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_gw_keys_lbl" value="verify" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;labelBackgroundColor=#ffffff;fontColor=#666666;" vertex="1" connectable="0" parent="e_gw_keys">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e_gw_models" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=1;strokeColor=#999999;dashed=1;fontSize=10;" edge="1" parent="1" source="gw_registry" target="models_yaml">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_gw_models_lbl" value="watchfiles" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;labelBackgroundColor=#ffffff;fontColor=#666666;" vertex="1" connectable="0" parent="e_gw_models">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <!-- Edges: adapters -> backends -->
+        <mxCell id="e_a_ollama" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#d79b00;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="adapter_ollama" target="ollama">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_a_ollama_lbl" value="httpx async&#xa;:11434" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;labelBackgroundColor=#ffffff;fontColor=#b35900;" vertex="1" connectable="0" parent="e_a_ollama">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e_a_mlx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#d79b00;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="adapter_mlx" target="mlx">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_a_mlx_lbl" value="httpx async&#xa;:8080" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;labelBackgroundColor=#ffffff;fontColor=#b35900;" vertex="1" connectable="0" parent="e_a_mlx">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e_a_dmr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#d79b00;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="adapter_dmr" target="dmr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_a_dmr_lbl" value="httpx async&#xa;model-runner.&#xa;docker.internal" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;labelBackgroundColor=#ffffff;fontColor=#b35900;" vertex="1" connectable="0" parent="e_a_dmr">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <!-- Bottom legend -->
+        <mxCell id="legend_box" value="Legend" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#999999;fontSize=12;fontStyle=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="700" width="220" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="56" y="730" width="22" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_container_lbl" value="Containerized service" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="86" y="728" width="170" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_native" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="56" y="758" width="22" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_native_lbl" value="Host-native (Metal GPU)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="86" y="756" width="170" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_store" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="56" y="786" width="22" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_store_lbl" value="Storage / config" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="86" y="784" width="170" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_solid" value="—— TLS / API request" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#0066cc;" vertex="1" parent="1">
+          <mxGeometry x="56" y="812" width="180" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_dashed" value="- - - read / watch" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="56" y="838" width="180" height="22" as="geometry" />
+        </mxCell>
+
+        <!-- Constraint callout -->
+        <mxCell id="constraint" value="⚠ Why backends run on the host&#xa;&#xa;MLX requires Apple Metal; Docker Desktop on Mac runs Linux containers in a VM with no Metal/GPU passthrough — and MLX has no Linux wheels. Native Ollama is also much faster than dockerized Ollama. So all three backends run natively, and only the gateway + Caddy are containerized." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0e0;strokeColor=#cc0000;strokeWidth=1;fontSize=11;verticalAlign=top;align=left;spacingLeft=10;spacingTop=6;spacingRight=8;" vertex="1" parent="1">
+          <mxGeometry x="1340" y="430" width="220" height="190" as="geometry" />
+        </mxCell>
+
+        <!-- Security callout -->
+        <mxCell id="sec_callout" value="🔒 Security posture (v1)&#xa;&#xa;• TLS via Caddy 'tls internal' (own CA)&#xa;• Bind to LAN IP only — no public exposure&#xa;• API keys: Argon2id hashed, prefix-indexed&#xa;• Authorization header redacted in logs&#xa;• CORS default-deny (allowlist via env)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f7e0;strokeColor=#2e7d32;strokeWidth=1;fontSize=11;verticalAlign=top;align=left;spacingLeft=10;spacingTop=6;spacingRight=8;" vertex="1" parent="1">
+          <mxGeometry x="1340" y="100" width="220" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- Request flow callout -->
+        <mxCell id="flow_callout" value="📨 Request flow (chat)&#xa;&#xa;1. Client → Caddy (HTTPS, Bearer token)&#xa;2. Caddy → Gateway (internal Docker net)&#xa;3. auth.verify(token) ✓&#xa;4. registry.lookup(model) → backend&#xa;5. adapter.chat_completions(body, stream)&#xa;6. SSE / JSON streamed back verbatim" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#f57c00;strokeWidth=1;fontSize=11;verticalAlign=top;align=left;spacingLeft=10;spacingTop=6;spacingRight=8;" vertex="1" parent="1">
+          <mxGeometry x="1340" y="270" width="220" height="150" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
