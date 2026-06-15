@@ -2,7 +2,7 @@ import logging
 import traceback
 from typing import Any
 
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -57,6 +57,26 @@ def error_response(
             param=param,
             code=code,
         ),
+    )
+
+
+async def http_exception_handler(
+    request: Request, exc: HTTPException
+) -> JSONResponse:
+    """Translate HTTPException -> JSON response.
+
+    When detail is a dict (e.g. from make_error()), emit it directly as
+    the response body so the OpenAI envelope shape is preserved.
+    FastAPI's built-in handler would nest it under {"detail": ...}.
+    """
+    if isinstance(exc.detail, dict):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=exc.detail,
+        )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
     )
 
 
@@ -117,6 +137,9 @@ async def unhandled_exception_handler(
 
 def install_exception_handlers(app: FastAPI) -> None:
     """Register all handlers on the FastAPI app."""
+    app.add_exception_handler(
+        HTTPException, http_exception_handler  # type: ignore[arg-type]
+    )
     app.add_exception_handler(
         NotSupportedError, not_supported_handler  # type: ignore[arg-type]
     )
