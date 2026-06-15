@@ -5,9 +5,9 @@ dev_branch: dev/local-ai-server
 current_phase: 2
 total_phases: 3
 execution_mode: step_by_step
-status: in_progress
+status: awaiting_merge_approval
 created: 2026-06-07
-updated: 2026-06-14
+updated: 2026-06-15
 ---
 
 ## Version History
@@ -24,10 +24,13 @@ updated: 2026-06-14
 
 ## Current Phase
 
-Phase 2 — Endpoints (Ollama wired): **starting architecture stage**.
+Phase 2 — Endpoints (Ollama wired): **awaiting merge approval**.
 
-- Predecessor: Phase 1 merged at `324b50f` on `dev/local-ai-server`.
-- Resume entry point: 3.1 (Create Phase Branch) for Phase 2.
+- Branch: `phase/local-ai-server/2-endpoints`
+- Commits: `0ee8259` (build), `37e89ef` (fix: M1 gather/zip + L4 annotation + M2 doc + plan comment; also lands the architecture spec)
+- QA: Reviewer PASS WITH NOTES (M1 fixed, M2 fixed via doc, L4 fixed; L3 already correct; Info #5 doc-only). Tester PASS — TestClient probes all green; live-Ollama checks SKIPPED (need real Ollama).
+- User paused at Pre-Merge Validation (3.8) to test locally with live Ollama before approving merge.
+- Resume entry point: 3.8 — re-invoke `/pm` and select "Approve merge — proceed to Phase 3".
 
 ## Pending Phases
 
