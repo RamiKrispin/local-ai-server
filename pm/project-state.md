@@ -5,9 +5,9 @@ dev_branch: dev/local-ai-server
 current_phase: 1
 total_phases: 3
 execution_mode: step_by_step
-status: in_progress
+status: awaiting_merge_approval
 created: 2026-06-07
-updated: 2026-06-07
+updated: 2026-06-09
 ---
 
 ## Version History
@@ -23,7 +23,13 @@ updated: 2026-06-07
 
 ## Current Phase
 
-Phase 1 — Skeleton (architecture stage).
+Phase 1 — Skeleton: **awaiting merge approval**.
+
+- Branch: `phase/local-ai-server/1-skeleton`
+- Commits: `aefb8d6` (build), `35f60ee` (fix: adapter import order)
+- QA: Reviewer PASS WITH NOTES, Tester PASS. Medium finding fixed; Low findings deferred per architecture.
+- User paused at Pre-Merge Validation (3.8) to test locally before approving merge.
+- Resume entry point: 3.8 — re-invoke `/pm-agent` and select "Approve merge — proceed to Phase 2".
 
 ## Pending Phases
 

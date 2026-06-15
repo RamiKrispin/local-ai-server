@@ -1,0 +1,21 @@
+models:
+  - id: ollama-llama3
+    backend: ollama
+    upstream_model: llama3.1:8b
+    capabilities: [chat, tools]
+
+  - id: ollama-nomic-embed
+    backend: ollama
+    upstream_model: nomic-embed-text
+    capabilities: [embeddings]
+
+  - id: mlx-mistral
+    backend: mlx
+    upstream_model: mlx-community/Mistral-7B-Instruct-v0.3
+    base_url: http://localhost:8080
+    capabilities: [chat]
+
+  - id: model-runner-llama32
+    backend: docker_model_runner
+    upstream_model: ai/llama3.2
+    capabilities: [chat, embeddings, tools]
