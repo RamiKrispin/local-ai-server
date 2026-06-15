@@ -515,7 +515,13 @@ curl -sS -o /dev/null -w "%{http_code}\n" -X POST http://127.0.0.1:8000/v1/chat/
 curl -sS -o /dev/null -w "%{http_code}\n" -X POST http://127.0.0.1:8000/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -d '{"model":"ollama-nomic-embed","messages":[{"role":"user","content":"x"}],"tools":[{"type":"function","function":{"name":"f","parameters":{"type":"object"}}}]}'
-# expected: 400
+# expected: 501 (capability gate fires first — ollama-nomic-embed lacks [chat])
+
+# 7b. tools gate: tools field on a chat-capable but not tools-capable model
+curl -sS -o /dev/null -w "%{http_code}\n" -X POST http://127.0.0.1:8000/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"mlx-mistral","messages":[{"role":"user","content":"hi"}],"tools":[{"type":"function","function":{"name":"f","parameters":{"type":"object"}}}]}'
+# expected: 400 (CHAT capability passes; tools gate fires)
 
 # 8. OpenAI SDK end-to-end
 uv run --with openai python - <<'PY'

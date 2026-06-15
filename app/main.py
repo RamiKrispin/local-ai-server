@@ -39,13 +39,12 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
+        _keys = sorted(app.state.adapters.keys())
         results = await asyncio.gather(
-            *(a.close() for a in app.state.adapters.values()),
+            *(app.state.adapters[k].close() for k in _keys),
             return_exceptions=True,
         )
-        for backend, result in zip(
-            sorted(app.state.adapters.keys()), results
-        ):
+        for backend, result in zip(_keys, results):
             if isinstance(result, BaseException):
                 log.warning(
                     "adapter close failed for %s: %s",

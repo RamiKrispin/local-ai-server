@@ -1,5 +1,5 @@
 import logging
-from typing import AsyncIterator
+from typing import AsyncGenerator, AsyncIterator
 
 import httpx
 
@@ -49,7 +49,7 @@ class OllamaAdapter(BackendAdapter):
 
     async def _stream(
         self, body: dict
-    ) -> AsyncIterator[bytes]:
+    ) -> AsyncGenerator[bytes, None]:
         try:
             async with self._client.stream(
                 "POST", "/v1/chat/completions", json=body,
