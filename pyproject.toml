@@ -11,6 +11,7 @@ dependencies = [
     "httpx>=0.27",
     "pydantic>=2.9",
     "pydantic-settings>=2.5",
+    "starlette<1.0",
     "pyyaml>=6.0",
 ]
 
@@ -25,3 +26,17 @@ dev = [
 
 [tool.uv]
 package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "live: tests that require a running Ollama process",
+]
+filterwarnings = [
+    "error",
+    # httpx emits DeprecationWarning on Python 3.13 for some defaults;
+    # tolerate them rather than fail the whole suite on a third-party warning.
+    "default::DeprecationWarning:httpx.*",
+]

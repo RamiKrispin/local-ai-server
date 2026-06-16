@@ -7,5 +7,5 @@ extend-select = ["E501"]
 
 
 [format]
-quite-style = "double"
+quote-style = "double"
 indent-style = "space"

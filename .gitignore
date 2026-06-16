@@ -1,2 +1,13 @@
 posts/*.*
 posts/assets/*.*
+# --- local-ai-server v0.1.0 (Phase 3) ---
+config/.env
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.egg-info/
