@@ -12,3 +12,15 @@ mlforecast==1.0.2
 lightgbm==4.6.0
 xgboost==3.0.2
 scikit-learn==1.7.0
+# --- local-ai-server v0.1.0 runtime + dev deps (Phase 3) ---
+fastapi>=0.115
+uvicorn[standard]>=0.32
+httpx>=0.27
+pydantic>=2.9
+pydantic-settings>=2.5
+pyyaml>=6.0
+pytest>=8
+pytest-asyncio>=0.24
+pytest-httpx>=0.30
+ruff>=0.6
+mypy>=1.11

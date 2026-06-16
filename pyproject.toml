@@ -12,6 +12,7 @@ dependencies = [
     "pydantic>=2.9",
     "pydantic-settings>=2.5",
     "pyyaml>=6.0",
+    "httpx2>=2.4.0",
 ]
 
 [dependency-groups]
@@ -25,3 +26,24 @@ dev = [
 
 [tool.uv]
 package = false
+
+[[tool.uv.index]]
+url = "https://pypi.apple.com/simple"
+default = true
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "live: tests that require a running Ollama process",
+]
+filterwarnings = [
+    "error",
+    # httpx emits DeprecationWarning on Python 3.13 for some defaults;
+    # tolerate them rather than fail the whole suite on a third-party warning.
+    "default::DeprecationWarning:httpx.*",
+    # Starlette 1.x renamed HTTP_422_UNPROCESSABLE_ENTITY; app/errors.py
+    # uses the old name (flagged for v0.2.0 cleanup — no app/ edits in P3).
+    "default::DeprecationWarning:starlette.*",
+]
