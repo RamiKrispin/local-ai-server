@@ -29,7 +29,6 @@ from app.adapters.docker_model_runner import DockerModelRunnerAdapter
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 async def test_dmr_chat_completions_raises_not_supported_with_not_implemented_code() -> None:  # noqa: E501
     """chat_completions raises NotSupportedError(code='not_implemented')."""
     adapter = DockerModelRunnerAdapter()
@@ -40,7 +39,6 @@ async def test_dmr_chat_completions_raises_not_supported_with_not_implemented_co
     assert exc.backend == "docker_model_runner"
 
 
-@pytest.mark.asyncio
 async def test_dmr_chat_completions_streaming_raises_not_supported() -> None:
     """stream=True also raises NotSupportedError(code='not_implemented')."""
     adapter = DockerModelRunnerAdapter()
@@ -49,7 +47,6 @@ async def test_dmr_chat_completions_streaming_raises_not_supported() -> None:
     assert exc_info.value.code == "not_implemented"
 
 
-@pytest.mark.asyncio
 async def test_dmr_embeddings_raises_not_supported_with_not_implemented_code() -> None:  # noqa: E501
     """embeddings raises NotSupportedError(code='not_implemented').
 
@@ -64,7 +61,6 @@ async def test_dmr_embeddings_raises_not_supported_with_not_implemented_code() -
     assert exc_info.value.code == "not_implemented"
 
 
-@pytest.mark.asyncio
 async def test_dmr_health_raises_not_supported_with_not_implemented_code() -> None:  # noqa: E501
     """health raises NotSupportedError(code='not_implemented')."""
     adapter = DockerModelRunnerAdapter()
@@ -73,7 +69,6 @@ async def test_dmr_health_raises_not_supported_with_not_implemented_code() -> No
     assert exc_info.value.code == "not_implemented"
 
 
-@pytest.mark.asyncio
 async def test_dmr_close_is_noop() -> None:
     """close() returns None and does not raise (stub holds no resources)."""
     adapter = DockerModelRunnerAdapter()

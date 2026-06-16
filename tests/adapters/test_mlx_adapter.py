@@ -24,7 +24,6 @@ from app.adapters.mlx import MLXAdapter
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 async def test_mlx_chat_completions_raises_not_supported_with_not_implemented_code() -> None:  # noqa: E501
     """chat_completions raises NotSupportedError(code='not_implemented')."""
     adapter = MLXAdapter()
@@ -35,7 +34,6 @@ async def test_mlx_chat_completions_raises_not_supported_with_not_implemented_co
     assert exc.backend == "mlx"
 
 
-@pytest.mark.asyncio
 async def test_mlx_chat_completions_streaming_raises_not_supported() -> None:
     """stream=True also raises NotSupportedError(code='not_implemented')
     before any streaming branch is entered."""
@@ -45,7 +43,6 @@ async def test_mlx_chat_completions_streaming_raises_not_supported() -> None:
     assert exc_info.value.code == "not_implemented"
 
 
-@pytest.mark.asyncio
 async def test_mlx_embeddings_raises_not_supported_with_capability_missing_code() -> None:  # noqa: E501
     """embeddings raises NotSupportedError(code='backend_capability_missing').
 
@@ -62,7 +59,6 @@ async def test_mlx_embeddings_raises_not_supported_with_capability_missing_code(
     assert exc.backend == "mlx"
 
 
-@pytest.mark.asyncio
 async def test_mlx_health_raises_not_supported_with_not_implemented_code() -> None:  # noqa: E501
     """health raises NotSupportedError(code='not_implemented')."""
     adapter = MLXAdapter()
@@ -71,7 +67,6 @@ async def test_mlx_health_raises_not_supported_with_not_implemented_code() -> No
     assert exc_info.value.code == "not_implemented"
 
 
-@pytest.mark.asyncio
 async def test_mlx_close_is_noop() -> None:
     """close() returns None and does not raise (stub holds no resources)."""
     adapter = MLXAdapter()

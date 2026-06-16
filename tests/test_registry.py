@@ -11,6 +11,7 @@ Error-path inventory (per phase-3-architecture.md §7):
   Row 15: missing required field → RegistryError mentioning the path
 """
 from pathlib import Path
+import dataclasses
 
 import pytest
 import yaml
@@ -251,7 +252,5 @@ def test_load_registry_base_url_optional(tmp_path: Path) -> None:
 def test_registry_is_immutable() -> None:
     """Registry is a frozen dataclass; mutating .models raises an error."""
     reg = load_registry("config/models.yaml")
-    import dataclasses
-
     with pytest.raises((dataclasses.FrozenInstanceError, AttributeError)):
         reg.models = ()  # type: ignore[misc]

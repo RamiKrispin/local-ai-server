@@ -21,6 +21,7 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
+from app.config import get_settings  # noqa: F401
 from app.main import create_app
 from app.registry import Registry
 
