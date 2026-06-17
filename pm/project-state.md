@@ -2,10 +2,10 @@
 project: local-ai-server
 current_version: v0.1.0
 dev_branch: dev/local-ai-server
-current_phase: 4
+current_phase: 5
 total_phases: 3
 execution_mode: step_by_step
-status: in_progress
+status: completed
 created: 2026-06-07
 updated: 2026-06-16
 ---
@@ -14,7 +14,7 @@ updated: 2026-06-16
 
 | Version | Description | Plan File | Status | Date |
 |---------|-------------|-----------|--------|------|
-| v0.1.0 | Skeleton + Ollama path; MLX/Model Runner stubbed at 501. | v0_1_0/development_plan.md | in_progress | 2026-06-07 |
+| v0.1.0 | Skeleton + Ollama path; MLX/Model Runner stubbed at 501. | v0_1_0/development_plan.md | completed | 2026-06-16 |
 
 ## Completed Phases (v0.1.0)
 
@@ -26,15 +26,12 @@ updated: 2026-06-16
 
 ## Current Phase
 
-Phase 4 — Documentation: **starting**.
+**v0.1.0 — COMPLETE.**
 
-- Predecessor: Phase 3 merged at `1eadab4` on `dev/local-ai-server`.
-- All 3 implementation phases complete. Docs Agent will generate README/API reference/usage guide/architecture doc; then Phase 5 (final summary) closes v0.1.0.
-- Resume entry point: Phase 4 (Docs Agent dispatch).
+- All 3 implementation phases merged into `dev/local-ai-server`.
+- Phase 4 (Docs Agent) delivered `docs/{api-reference,usage-guide,architecture}.md` at commit `f99eed4`.
+- Phase 5 (final summary): closing record. Project ready for PR from `dev/local-ai-server` to `main`.
 
 ## Pending Phases
 
-| Phase | Name | Goal |
-|-------|------|------|
-| 4 | Documentation | Docs Agent produces README review + API reference + usage guide + architecture doc from the implemented codebase. |
-| 5 | Final summary | Close v0.1.0; update version-history table; project ready for PR from `dev/local-ai-server` to `main`. |
+None — v0.1.0 is closed. Future work tracked under v0.2.0+ (auth + obs), v0.3.0 (containers + TLS), v0.4.0+ (real MLX + Docker Model Runner + host-backend Makefile).

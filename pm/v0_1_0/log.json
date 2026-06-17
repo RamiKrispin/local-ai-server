@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-06-15T15:30:00Z",
+  "generated_at": "2026-06-16T16:00:00Z",
   "project": {
     "name": "local-ai-server",
     "dev_branch": "dev/local-ai-server",
@@ -14,7 +14,7 @@
     "plan_file": "pm/v0_1_0/development_plan.md",
     "log_file": "pm/v0_1_0/log.json",
     "created_date": "2026-06-07",
-    "updated_at": "2026-06-15T15:30:00Z"
+    "updated_at": "2026-06-16T16:00:00Z"
   },
   "overview": {
     "summary": "local-ai-server is a home AI gateway running on a Mac Studio that exposes an OpenAI-compatible HTTP API and routes requests to local LLM backends. The full spec targets a TLS-fronted multi-backend service (Ollama + MLX + Docker Model Runner) with API-key auth, Caddy, and host-side process management. v0.1.0 is the first vertical slice: a FastAPI gateway that wires the Ollama backend end-to-end via an OpenAI SDK, with MLXAdapter and DockerModelRunnerAdapter present as 501 stubs to lock the BackendAdapter ABC seam. No auth, no Caddy, no Compose, no Makefile in this version — those land in v0.2.0+. The aim is to prove OpenAI compatibility, the registry/adapter routing layer, and SSE streaming behavior against a real local Ollama process.",
@@ -399,14 +399,14 @@
       "number": 3,
       "name": "Tests + docs",
       "goal": "Live integration tests against a real Ollama pass; stub adapters covered for 501 behavior; `ruff check .` clean; `docker/requirements.txt` parity with runtime deps; README finalized for v0.1.0.",
-      "status": "pending",
-      "branch": null,
-      "architecture_file": null,
-      "completed_at": null
+      "status": "completed",
+      "branch": "phase/local-ai-server/3-tests-docs",
+      "architecture_file": "pm/v0_1_0/phase-3-architecture.md",
+      "completed_at": "2026-06-16T16:00:00Z"
     }
   ],
   "progress_summary": {
-    "phases_completed": 2,
+    "phases_completed": 3,
     "phases_total": 3
   }
 }
