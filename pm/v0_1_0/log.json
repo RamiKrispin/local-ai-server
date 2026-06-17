@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-06-14T18:30:00Z",
+  "generated_at": "2026-06-15T15:30:00Z",
   "project": {
     "name": "local-ai-server",
     "dev_branch": "dev/local-ai-server",
@@ -14,7 +14,7 @@
     "plan_file": "pm/v0_1_0/development_plan.md",
     "log_file": "pm/v0_1_0/log.json",
     "created_date": "2026-06-07",
-    "updated_at": "2026-06-14T18:30:00Z"
+    "updated_at": "2026-06-15T15:30:00Z"
   },
   "overview": {
     "summary": "local-ai-server is a home AI gateway running on a Mac Studio that exposes an OpenAI-compatible HTTP API and routes requests to local LLM backends. The full spec targets a TLS-fronted multi-backend service (Ollama + MLX + Docker Model Runner) with API-key auth, Caddy, and host-side process management. v0.1.0 is the first vertical slice: a FastAPI gateway that wires the Ollama backend end-to-end via an OpenAI SDK, with MLXAdapter and DockerModelRunnerAdapter present as 501 stubs to lock the BackendAdapter ABC seam. No auth, no Caddy, no Compose, no Makefile in this version — those land in v0.2.0+. The aim is to prove OpenAI compatibility, the registry/adapter routing layer, and SSE streaming behavior against a real local Ollama process.",
@@ -390,10 +390,10 @@
       "number": 2,
       "name": "Endpoints (Ollama wired)",
       "goal": "Against a real Ollama, OpenAI SDK can call `models.list()`, `chat.completions.create` (streaming + non-streaming), and `embeddings.create` end-to-end; capability and tools gating enforced; MLX and Docker Model Runner adapters return 501 from every method.",
-      "status": "pending",
-      "branch": null,
-      "architecture_file": null,
-      "completed_at": null
+      "status": "completed",
+      "branch": "phase/local-ai-server/2-endpoints",
+      "architecture_file": "pm/v0_1_0/phase-2-architecture.md",
+      "completed_at": "2026-06-15T15:30:00Z"
     },
     {
       "number": 3,
@@ -406,7 +406,7 @@
     }
   ],
   "progress_summary": {
-    "phases_completed": 1,
+    "phases_completed": 2,
     "phases_total": 3
   }
 }
