@@ -140,6 +140,15 @@ A runnable end-to-end demo lives at [`examples/v0_1_0_demo.ipynb`](examples/v0_1
 
 The full v1 design is in [`docs/spec.md`](docs/spec.md), including the request lifecycle, repository layout, adapter contracts, configuration schema, auth flow, container/Caddy setup, host-side Makefile for backend lifecycle, and the end-to-end verification plan.
 
+## Reference docs
+
+Supplementary docs grounded in the v0.1.0 implementation:
+
+- [`docs/api-reference.md`](docs/api-reference.md) — endpoints, request fields, error envelope, capability/tools gating decision table, backend matrix.
+- [`docs/usage-guide.md`](docs/usage-guide.md) — setup walkthrough, common tasks (list models, chat, streaming, embeddings, adding a model), and troubleshooting.
+- [`docs/architecture.md`](docs/architecture.md) — components, request lifecycle, lifespan, streaming contract, and v0.2.0+ extension points.
+- [`docs/spec.md`](docs/spec.md) — long-term v1 design (auth, Caddy, TLS, host Makefile, end-to-end verification).
+
 ## License
 
 [CC-BY-NC-SA-4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
