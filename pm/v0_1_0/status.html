@@ -291,11 +291,11 @@
     <div class="sub">
       OpenAI-compatible local AI gateway for a Mac Studio host
       &nbsp;·&nbsp;
-      <span class="pill active"><span class="dot"></span>v0.1.0 · Phase 2 awaiting merge</span>
+      <span class="pill done"><span class="dot"></span>v0.1.0 shipped · <a href="https://github.com/RamiKrispin/local-ai-server/pull/1" style="color: inherit; text-decoration: underline;">PR #1</a> open</span>
     </div>
   </div>
   <div class="meta">
-    <div>last updated <strong>2026-06-15</strong></div>
+    <div>last updated <strong>2026-06-18</strong></div>
     <div class="repo">/Users/ramikrispin/Personal/tutorials/local-ai-server</div>
     <div>plan <span class="repo">pm/v0_1_0/development_plan.md</span></div>
   </div>
@@ -304,10 +304,10 @@
 <!-- At-a-glance -->
 <section>
   <div class="glance">
-    <div class="stat"><div class="v">2 / 3</div><div class="k">Phases complete</div></div>
-    <div class="stat"><div class="v">~67%</div><div class="k">v0.1.0 progress</div></div>
-    <div class="stat"><div class="v">10</div><div class="k">commits on dev</div></div>
-    <div class="stat"><div class="v">17</div><div class="k">source files shipped</div></div>
+    <div class="stat"><div class="v">3 / 3</div><div class="k">Phases complete</div></div>
+    <div class="stat"><div class="v">100%</div><div class="k">v0.1.0 progress</div></div>
+    <div class="stat"><div class="v">20</div><div class="k">commits on dev</div></div>
+    <div class="stat"><div class="v">61</div><div class="k">tests (50 non-live + 11 live)</div></div>
   </div>
 </section>
 
@@ -324,20 +324,20 @@
     <div class="arrow">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </div>
-    <div class="step active">
+    <div class="step done">
       <div class="num">PHASE 02</div>
       <div class="name">Endpoints (Ollama wired)</div>
       <div class="goal">Real httpx adapter, three <code>/v1</code> routers, capability + tools gates, SSE streaming, demo notebook.</div>
-      <span class="pill active"><span class="dot"></span>awaiting merge approval</span>
+      <span class="pill done"><span class="dot"></span>merged 5820e5d</span>
     </div>
     <div class="arrow">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </div>
-    <div class="step pending">
+    <div class="step done">
       <div class="num">PHASE 03</div>
       <div class="name">Tests + docs</div>
       <div class="goal">Live pytest against real Ollama, stub-adapter contract tests, README rewrite, ruff cleanup, dev-container parity.</div>
-      <span class="pill pending"><span class="dot"></span>not started</span>
+      <span class="pill done"><span class="dot"></span>merged 1eadab4</span>
     </div>
   </div>
 </section>
@@ -370,10 +370,10 @@
     </div>
 
     <!-- Phase 2 -->
-    <div class="card active">
-      <h3>Phase 2 — Endpoints, Ollama wired <span class="partial">●</span></h3>
-      <div class="tag">on <code>phase/local-ai-server/2-endpoints</code> · 3 commits queued</div>
-      <h4>Built &amp; QA-cleared</h4>
+    <div class="card done">
+      <h3>Phase 2 — Endpoints, Ollama wired <span class="check">✓</span></h3>
+      <div class="tag">merged into <code>dev/local-ai-server</code> at <code>5820e5d</code></div>
+      <h4>Delivered</h4>
       <ul>
         <li><span class="check">✓</span> <code>OllamaAdapter</code>: chat (non-stream + SSE via <code>aiter_raw</code>), embeddings, health, close</li>
         <li><span class="check">✓</span> <code>build_adapters(registry, settings)</code> factory</li>
@@ -384,28 +384,32 @@
         <li><span class="check">✓</span> <code>http_exception_handler</code> (envelope-shape fix)</li>
         <li><span class="check">✓</span> <code>examples/v0_1_0_demo.ipynb</code> (13 cells)</li>
       </ul>
-      <h4>Pending</h4>
+      <h4>QA</h4>
       <ul>
-        <li><span class="partial">○</span> User-side live-Ollama checkpoints (paused before merge)</li>
-        <li><span class="partial">○</span> Merge into <code>dev/local-ai-server</code></li>
+        <li>Reviewer: PASS WITH NOTES (M1 + M2 + L4 fixed)</li>
+        <li>Tester: PASS — TestClient probes, capability + tools gates, lifespan, SSE_HEADERS</li>
       </ul>
     </div>
 
     <!-- Phase 3 -->
-    <div class="card pending">
-      <h3>Phase 3 — Tests + docs <span class="open">○</span></h3>
-      <div class="tag">not started — runs after Phase 2 merges</div>
-      <h4>Planned scope</h4>
+    <div class="card done">
+      <h3>Phase 3 — Tests + docs <span class="check">✓</span></h3>
+      <div class="tag">merged into <code>dev/local-ai-server</code> at <code>1eadab4</code></div>
+      <h4>Delivered</h4>
       <ul>
-        <li><span class="open">○</span> <code>tests/test_chat.py</code>, <code>test_chat_streaming.py</code> (live Ollama)</li>
-        <li><span class="open">○</span> <code>test_embeddings.py</code>, <code>test_models_endpoint.py</code></li>
-        <li><span class="open">○</span> <code>tests/adapters/test_*_adapter.py</code> (incl. 501 contracts)</li>
-        <li><span class="open">○</span> <code>test_registry.py</code> + <code>conftest.py</code></li>
-        <li><span class="open">○</span> README rewrite for v0.1.0 (quick-start, registry example)</li>
-        <li><span class="open">○</span> <code>docker/requirements.txt</code> parity with runtime deps</li>
-        <li><span class="open">○</span> <code>.gitignore</code> extension (<code>config/.env</code>, <code>__pycache__/</code>, etc.)</li>
-        <li><span class="open">○</span> <code>ruff.toml</code> typo fix (<code>quite-style</code> → <code>quote-style</code>)</li>
-        <li><span class="open">○</span> 27 carried-forward <code>mypy --strict</code> cleanups</li>
+        <li><span class="check">✓</span> 11 test files, 61 tests (50 non-live + 11 live with auto-skip)</li>
+        <li><span class="check">✓</span> <code>tests/conftest.py</code> with <code>ollama_alive</code> fixture + collection hook</li>
+        <li><span class="check">✓</span> Stub adapters covered for 501 / not_implemented / backend_capability_missing codes</li>
+        <li><span class="check">✓</span> README rewrite for v0.1.0 (prereqs, quick-start, models.yaml, SDK example, roadmap)</li>
+        <li><span class="check">✓</span> <code>docker/requirements.txt</code> parity with runtime + test deps</li>
+        <li><span class="check">✓</span> <code>ruff.toml</code> typo fix (<code>quite-style</code> → <code>quote-style</code>)</li>
+        <li><span class="check">✓</span> <code>.gitignore</code> extension (<code>config/.env</code>, pytest/mypy/ruff caches)</li>
+        <li><span class="check">✓</span> <code>app/errors.py</code>: <code>HTTP_422_UNPROCESSABLE_CONTENT</code> rename (Phase 2 regression unmasked)</li>
+      </ul>
+      <h4>QA</h4>
+      <ul>
+        <li>Initially FAIL on supply-chain (<code>httpx2</code> + <code>pypi.apple.com</code>)</li>
+        <li>Final: PASS — 50 non-live tests, ruff clean (project mode), supply chain restored to public PyPI</li>
       </ul>
     </div>
 
@@ -452,10 +456,10 @@
         <div class="block done">Error envelope + handlers <span class="small">(P1)</span></div>
         <div class="block done">Registry loader <span class="small">(P1)</span></div>
         <div class="block done"><code>GET /healthz</code> <span class="small">(P1)</span></div>
-        <div class="block active"><code>GET /v1/models</code> <span class="small">(P2)</span></div>
-        <div class="block active"><code>POST /v1/chat/completions</code> <span class="small">(P2)</span></div>
-        <div class="block active"><code>POST /v1/embeddings</code> <span class="small">(P2)</span></div>
-        <div class="block active">Capability + tools gates <span class="small">(P2)</span></div>
+        <div class="block done"><code>GET /v1/models</code> <span class="small">(P2)</span></div>
+        <div class="block done"><code>POST /v1/chat/completions</code> <span class="small">(P2)</span></div>
+        <div class="block done"><code>POST /v1/embeddings</code> <span class="small">(P2)</span></div>
+        <div class="block done">Capability + tools gates <span class="small">(P2)</span></div>
         <div class="block pending"><code>GET /readyz</code> <span class="small">(v0.2.0)</span></div>
       </div>
     </div>
@@ -463,7 +467,7 @@
       <div class="arch-label">Adapters</div>
       <div class="blocks">
         <div class="block done">BackendAdapter ABC <span class="small">(P1)</span></div>
-        <div class="block active">OllamaAdapter (real httpx) <span class="small">(P2)</span></div>
+        <div class="block done">OllamaAdapter (real httpx) <span class="small">(P2)</span></div>
         <div class="block done">MLXAdapter (501 stub) <span class="small">(P1)</span></div>
         <div class="block done">DockerModelRunnerAdapter (501 stub) <span class="small">(P1)</span></div>
         <div class="block pending">Real MLX implementation <span class="small">(v0.4.0+)</span></div>
@@ -491,10 +495,11 @@
     <div class="arch-row">
       <div class="arch-label">Tests &amp; docs</div>
       <div class="blocks">
-        <div class="block pending">Live integration tests <span class="small">(P3)</span></div>
-        <div class="block pending">Stub-adapter tests <span class="small">(P3)</span></div>
-        <div class="block pending">README v0.1.0 rewrite <span class="small">(P3)</span></div>
-        <div class="block pending">ruff.toml typo fix <span class="small">(P3)</span></div>
+        <div class="block done">Live integration tests <span class="small">(P3)</span></div>
+        <div class="block done">Stub-adapter tests <span class="small">(P3)</span></div>
+        <div class="block done">README v0.1.0 <span class="small">(P3)</span></div>
+        <div class="block done">ruff.toml typo fix <span class="small">(P3)</span></div>
+        <div class="block done">API reference + usage guide + arch doc <span class="small">(P4)</span></div>
       </div>
     </div>
   </div>
@@ -504,14 +509,14 @@
 <section>
   <h2>Version roadmap</h2>
   <div class="roadmap">
-    <div class="row active">
+    <div class="row done">
       <div class="ver">v0.1.0</div>
       <div class="body">
         Skeleton + Ollama path; MLX/DMR stubbed at 501.
-        <div class="bar"><span style="width:67%"></span></div>
-        <div class="what">Phase 1 ✓ &nbsp;·&nbsp; Phase 2 awaiting merge &nbsp;·&nbsp; Phase 3 pending</div>
+        <div class="bar full"><span style="width:100%"></span></div>
+        <div class="what">Phase 1 ✓ &nbsp;·&nbsp; Phase 2 ✓ &nbsp;·&nbsp; Phase 3 ✓ &nbsp;·&nbsp; PR <a href="https://github.com/RamiKrispin/local-ai-server/pull/1" style="color: inherit;">#1</a> open</div>
       </div>
-      <span class="pill active"><span class="dot"></span>current</span>
+      <span class="pill done"><span class="dot"></span>shipped</span>
     </div>
     <div class="row pending">
       <div class="ver">v0.2.0</div>
@@ -549,25 +554,25 @@
     <div class="info">
       <h3>Branches</h3>
       <ul>
-        <li><code>main</code> — initial commit only; PR target after Phase 5</li>
-        <li><code>dev/local-ai-server</code> — integration branch; <code>324b50f</code> Phase 1 merged · 4 commits</li>
-        <li><code>phase/local-ai-server/2-endpoints</code> — current; 3 commits queued for merge</li>
+        <li><code>main</code> — initial commit; PR <a href="https://github.com/RamiKrispin/local-ai-server/pull/1">#1</a> open from <code>dev/local-ai-server</code></li>
+        <li><code>dev/local-ai-server</code> — v0.1.0 closed; 20 commits; pushed to origin</li>
+        <li><strong>Phase branches</strong> — all merged and safely deleted</li>
       </ul>
     </div>
     <div class="info">
-      <h3>Resume</h3>
+      <h3>What's next</h3>
       <ul>
-        <li>Run live-Ollama checkpoints from <code>pm/v0_1_0/phase-2-architecture.md</code> §9</li>
-        <li>Type <code>/pm</code> — orchestrator re-enters at step 3.8</li>
-        <li>Pick <em>Approve merge — proceed to Phase 3</em> when satisfied</li>
-        <li>Phase 3 will then auto-start: branch, architect, build, QA, merge</li>
+        <li>PR <a href="https://github.com/RamiKrispin/local-ai-server/pull/1">#1</a> review and merge into <code>main</code></li>
+        <li>v0.2.0 backlog: API-key auth (Argon2id + SQLite), <code>/readyz</code>, structlog, watchfiles hot-reload</li>
+        <li>27 carried-forward <code>mypy --strict</code> annotation cleanups</li>
+        <li>Type <code>/pm</code> when ready to start v0.2.0</li>
       </ul>
     </div>
   </div>
 </section>
 
 <footer>
-  <div>local-ai-server v0.1.0 · status snapshot 2026-06-15</div>
+  <div>local-ai-server v0.1.0 · shipped 2026-06-18 · PR <a href="https://github.com/RamiKrispin/local-ai-server/pull/1" style="color: inherit;">#1</a></div>
   <div class="repo">pm/v0_1_0/status.html</div>
 </footer>
 

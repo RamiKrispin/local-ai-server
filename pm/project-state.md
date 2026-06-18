@@ -12,9 +12,9 @@ updated: 2026-06-16
 
 ## Version History
 
-| Version | Description | Plan File | Status | Date |
-|---------|-------------|-----------|--------|------|
-| v0.1.0 | Skeleton + Ollama path; MLX/Model Runner stubbed at 501. | v0_1_0/development_plan.md | completed | 2026-06-16 |
+| Version | Description | Plan File | Status | Date | PR |
+|---------|-------------|-----------|--------|------|----|
+| v0.1.0 | Skeleton + Ollama path; MLX/Model Runner stubbed at 501. | v0_1_0/development_plan.md | shipped | 2026-06-18 | [#1](https://github.com/RamiKrispin/local-ai-server/pull/1) |
 
 ## Completed Phases (v0.1.0)
 
@@ -26,11 +26,12 @@ updated: 2026-06-16
 
 ## Current Phase
 
-**v0.1.0 — COMPLETE.**
+**v0.1.0 — SHIPPED.**
 
 - All 3 implementation phases merged into `dev/local-ai-server`.
 - Phase 4 (Docs Agent) delivered `docs/{api-reference,usage-guide,architecture}.md` at commit `f99eed4`.
-- Phase 5 (final summary): closing record. Project ready for PR from `dev/local-ai-server` to `main`.
+- Phase 5 (final summary) closed at commit `4dba13e`.
+- PR [#1](https://github.com/RamiKrispin/local-ai-server/pull/1) open against `main` (2026-06-18).
 
 ## Pending Phases
 
