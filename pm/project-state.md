@@ -2,12 +2,12 @@
 project: local-ai-server
 current_version: v0.2.0
 dev_branch: dev/local-ai-server
-current_phase: 0
+current_phase: 1
 total_phases: 3
-execution_mode: pending
-status: planning
+execution_mode: step_by_step
+status: in_progress
 created: 2026-06-07
-updated: 2026-06-18
+updated: 2026-06-19
 ---
 
 ## Version History
@@ -32,7 +32,10 @@ updated: 2026-06-18
 
 ## Current Phase
 
-v0.2.0 awaiting plan approval (Checkpoint 2).
+v0.2.0 Phase 1 — Auth foundation: **starting architecture stage**.
+
+- Predecessor: v0.1.0 shipped to main at `12d69e7` (PR #1); v0.2.0 plan approved 2026-06-19.
+- Resume entry point: 3.1 (Create Phase Branch) for v0.2.0 Phase 1.
 
 ## Pending Phases
 
