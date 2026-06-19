@@ -1,0 +1,412 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-06-16T16:00:00Z",
+  "project": {
+    "name": "local-ai-server",
+    "dev_branch": "dev/local-ai-server",
+    "created_date": "2026-06-07"
+  },
+  "version": {
+    "id": "v0.1.0",
+    "id_underscored": "v0_1_0",
+    "description": "Skeleton + Ollama path; MLX/Model Runner stubbed at 501.",
+    "status": "in_progress",
+    "plan_file": "pm/v0_1_0/development_plan.md",
+    "log_file": "pm/v0_1_0/log.json",
+    "created_date": "2026-06-07",
+    "updated_at": "2026-06-16T16:00:00Z"
+  },
+  "overview": {
+    "summary": "local-ai-server is a home AI gateway running on a Mac Studio that exposes an OpenAI-compatible HTTP API and routes requests to local LLM backends. The full spec targets a TLS-fronted multi-backend service (Ollama + MLX + Docker Model Runner) with API-key auth, Caddy, and host-side process management. v0.1.0 is the first vertical slice: a FastAPI gateway that wires the Ollama backend end-to-end via an OpenAI SDK, with MLXAdapter and DockerModelRunnerAdapter present as 501 stubs to lock the BackendAdapter ABC seam. No auth, no Caddy, no Compose, no Makefile in this version — those land in v0.2.0+. The aim is to prove OpenAI compatibility, the registry/adapter routing layer, and SSE streaming behavior against a real local Ollama process.",
+    "requirements": [
+      "OpenAI compatibility: Any OpenAI SDK client (Python, Node, LangChain) must work against the gateway with only base_url changed; v0.1.0 has no api_key requirement yet.",
+      "Single LAN endpoint: One FastAPI service fans out to local backends; v0.1.0 wires Ollama only and stubs the rest at HTTP 501.",
+      "OpenAI v1 wire shapes: Mirror request/response schemas verbatim — GET /v1/models, POST /v1/chat/completions (stream + non-stream), POST /v1/embeddings.",
+      "SSE streaming fidelity: Pass through upstream data: {json}\\n\\n events including the terminal data: [DONE]\\n\\n verbatim; no buffering, no synthesizing.",
+      "Adapter pattern: BackendAdapter ABC with concrete OllamaAdapter (wired), MLXAdapter (stub), DockerModelRunnerAdapter (stub). Stubs raise NotSupportedError translated to HTTP 501.",
+      "Capability gating: models.yaml declares per-model capabilities (chat, embeddings, tools); embeddings call against a chat-only model returns HTTP 501; tools field against a non-supports_tools model returns HTTP 400 before backend dispatch.",
+      "Live integration tests: Tests assume a real Ollama is running on the host with llama3.1:8b and nomic-embed-text pulled; pytest-httpx mocks are reserved for the trivial 501 stubs.",
+      "Tight dependency surface: Python 3.12 + FastAPI + uvicorn + httpx + pydantic v2 + pydantic-settings + pyyaml + pytest stack only. structlog and watchfiles are deferred to v0.2.0.",
+      "OpenAI-compatible error envelope: All errors emit {\"error\": {\"type\", \"message\", \"param\", \"code\"}}.",
+      "Notebook demo: One Jupyter/Quarto notebook for the user-facing endpoints lands in phase 2."
+    ],
+    "technology_stack": [
+      "Python 3.12",
+      "FastAPI",
+      "uvicorn",
+      "httpx",
+      "pydantic v2",
+      "pydantic-settings",
+      "pyyaml",
+      "pytest",
+      "pytest-asyncio",
+      "pytest-httpx",
+      "ruff",
+      "uv",
+      "Ollama",
+      "macOS (Mac Studio)"
+    ],
+    "total_phases": 3
+  },
+  "plan": {
+    "gantt": [
+      {
+        "id": "p1a",
+        "name": "pyproject + config + schemas",
+        "section": "Phase 1 - Skeleton",
+        "start_date": "2026-06-07",
+        "duration_days": 2,
+        "depends_on": null
+      },
+      {
+        "id": "p1b",
+        "name": "registry loader",
+        "section": "Phase 1 - Skeleton",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p1a"
+      },
+      {
+        "id": "p1c",
+        "name": "adapter ABC + 3 stubs",
+        "section": "Phase 1 - Skeleton",
+        "start_date": null,
+        "duration_days": 2,
+        "depends_on": "p1b"
+      },
+      {
+        "id": "p1d",
+        "name": "main.py + healthz boot",
+        "section": "Phase 1 - Skeleton",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p1c"
+      },
+      {
+        "id": "p2a",
+        "name": "OllamaAdapter (chat non-stream)",
+        "section": "Phase 2 - Endpoints (Ollama wired)",
+        "start_date": null,
+        "duration_days": 2,
+        "depends_on": "p1d"
+      },
+      {
+        "id": "p2b",
+        "name": "OllamaAdapter (SSE streaming)",
+        "section": "Phase 2 - Endpoints (Ollama wired)",
+        "start_date": null,
+        "duration_days": 2,
+        "depends_on": "p2a"
+      },
+      {
+        "id": "p2c",
+        "name": "OllamaAdapter (embeddings)",
+        "section": "Phase 2 - Endpoints (Ollama wired)",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p2b"
+      },
+      {
+        "id": "p2d",
+        "name": "/v1/models + capability gating",
+        "section": "Phase 2 - Endpoints (Ollama wired)",
+        "start_date": null,
+        "duration_days": 2,
+        "depends_on": "p2c"
+      },
+      {
+        "id": "p2e",
+        "name": "Notebook demo",
+        "section": "Phase 2 - Endpoints (Ollama wired)",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p2d"
+      },
+      {
+        "id": "p3a",
+        "name": "Live integration tests",
+        "section": "Phase 3 - Tests + docs",
+        "start_date": null,
+        "duration_days": 3,
+        "depends_on": "p2e"
+      },
+      {
+        "id": "p3b",
+        "name": "Stub adapter tests",
+        "section": "Phase 3 - Tests + docs",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p3a"
+      },
+      {
+        "id": "p3c",
+        "name": "README v0.1.0 rewrite",
+        "section": "Phase 3 - Tests + docs",
+        "start_date": null,
+        "duration_days": 2,
+        "depends_on": "p3b"
+      },
+      {
+        "id": "p3d",
+        "name": "docker/requirements.txt + ruff",
+        "section": "Phase 3 - Tests + docs",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p3c"
+      }
+    ],
+    "loe": {
+      "rows": [
+        {
+          "phase": "1 - Skeleton",
+          "component": "`pyproject.toml` + uv setup",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Standard config; well-known pattern."
+        },
+        {
+          "phase": "1 - Skeleton",
+          "component": "`app/config.py` (pydantic-settings)",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Boilerplate env loader."
+        },
+        {
+          "phase": "1 - Skeleton",
+          "component": "`app/schemas.py` (OpenAI v1 mirrors)",
+          "complexity": "Med",
+          "model": "Opus",
+          "agent": "Architect",
+          "rationale": "Schema fidelity is load-bearing for SDK compat; Opus catches OpenAI shape edge cases."
+        },
+        {
+          "phase": "1 - Skeleton",
+          "component": "`app/errors.py` (envelope + handlers)",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Small, well-defined module."
+        },
+        {
+          "phase": "1 - Skeleton",
+          "component": "`app/registry.py` (yaml loader)",
+          "complexity": "Med",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "YAML + dataclass plumbing, no hot-reload."
+        },
+        {
+          "phase": "1 - Skeleton",
+          "component": "`app/adapters/base.py` (ABC)",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "ABC + custom exception."
+        },
+        {
+          "phase": "1 - Skeleton",
+          "component": "`app/adapters/{mlx,docker_model_runner}.py` (501 stubs)",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Trivial NotSupportedError methods."
+        },
+        {
+          "phase": "1 - Skeleton",
+          "component": "`app/adapters/ollama.py` (skeleton only — no impl yet)",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Class scaffold with NotImplementedError to be filled in P2."
+        },
+        {
+          "phase": "1 - Skeleton",
+          "component": "`app/main.py` + `routers/health.py` + `config/models.yaml` + `config/.env.example`",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Wiring + sample configs."
+        },
+        {
+          "phase": "2 - Endpoints (Ollama wired)",
+          "component": "`OllamaAdapter.chat_completions` (non-stream)",
+          "complexity": "Med",
+          "model": "Opus",
+          "agent": "Architect",
+          "rationale": "Httpx async + body translation; first end-to-end seam, worth getting right."
+        },
+        {
+          "phase": "2 - Endpoints (Ollama wired)",
+          "component": "`OllamaAdapter.chat_completions` (streaming)",
+          "complexity": "High",
+          "model": "Opus",
+          "agent": "Architect",
+          "rationale": "`aiter_raw` + cancel-safe try/finally per spec §5.3; SSE buffering pitfalls."
+        },
+        {
+          "phase": "2 - Endpoints (Ollama wired)",
+          "component": "`OllamaAdapter.embeddings` + `health`",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Straight passthrough."
+        },
+        {
+          "phase": "2 - Endpoints (Ollama wired)",
+          "component": "`app/routers/chat.py` (incl. capability + tools gate)",
+          "complexity": "Med",
+          "model": "Opus",
+          "agent": "Architect",
+          "rationale": "Branching logic for stream vs non-stream + gating; needs care for StreamingResponse headers."
+        },
+        {
+          "phase": "2 - Endpoints (Ollama wired)",
+          "component": "`app/routers/embeddings.py`",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Thin wrapper."
+        },
+        {
+          "phase": "2 - Endpoints (Ollama wired)",
+          "component": "`app/routers/models.py`",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Registry → JSON."
+        },
+        {
+          "phase": "2 - Endpoints (Ollama wired)",
+          "component": "`posts/v0_1_0_demo.ipynb`",
+          "complexity": "Med",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Notebook authoring + narrative; standard openai SDK calls."
+        },
+        {
+          "phase": "3 - Tests + docs",
+          "component": "`tests/conftest.py` + fixtures",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "QA",
+          "rationale": "Pytest plumbing."
+        },
+        {
+          "phase": "3 - Tests + docs",
+          "component": "`tests/test_registry.py`",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "QA",
+          "rationale": "Unit."
+        },
+        {
+          "phase": "3 - Tests + docs",
+          "component": "`tests/test_models_endpoint.py`",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "QA",
+          "rationale": "TestClient assertions."
+        },
+        {
+          "phase": "3 - Tests + docs",
+          "component": "`tests/test_chat.py` (live Ollama)",
+          "complexity": "Med",
+          "model": "Sonnet",
+          "agent": "QA",
+          "rationale": "Live HTTP calls — needs assertion design but well-trodden."
+        },
+        {
+          "phase": "3 - Tests + docs",
+          "component": "`tests/test_chat_streaming.py` (live Ollama)",
+          "complexity": "Med",
+          "model": "Opus",
+          "agent": "QA",
+          "rationale": "Streaming assertions: collect chunks, assert `[DONE]`, assert ordering."
+        },
+        {
+          "phase": "3 - Tests + docs",
+          "component": "`tests/test_embeddings.py` (live Ollama)",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "QA",
+          "rationale": "Vector shape + length."
+        },
+        {
+          "phase": "3 - Tests + docs",
+          "component": "`tests/adapters/test_ollama_adapter.py`",
+          "complexity": "Med",
+          "model": "Sonnet",
+          "agent": "QA",
+          "rationale": "Live adapter-level coverage."
+        },
+        {
+          "phase": "3 - Tests + docs",
+          "component": "`tests/adapters/test_mlx_adapter.py` + `test_docker_model_runner_adapter.py`",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "QA",
+          "rationale": "Verify all methods 501 via TestClient + httpx mock."
+        },
+        {
+          "phase": "3 - Tests + docs",
+          "component": "README v0.1.0 rewrite",
+          "complexity": "Med",
+          "model": "Opus",
+          "agent": "Architect",
+          "rationale": "Tone + accuracy of public-facing doc; quick-start narrative."
+        },
+        {
+          "phase": "3 - Tests + docs",
+          "component": "`docker/requirements.txt` extension",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Mirror runtime deps."
+        },
+        {
+          "phase": "3 - Tests + docs",
+          "component": "Ruff cleanup pass",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "QA",
+          "rationale": "Mechanical."
+        }
+      ]
+    }
+  },
+  "phases": [
+    {
+      "number": 1,
+      "name": "Skeleton",
+      "goal": "Project structure compiles, imports clean, `uvicorn` boots, `/healthz` returns 200; ABC + 3 stub adapters in place; registry loads `config/models.yaml`.",
+      "status": "completed",
+      "branch": "phase/local-ai-server/1-skeleton",
+      "architecture_file": "pm/v0_1_0/phase-1-architecture.md",
+      "completed_at": "2026-06-14T18:30:00Z"
+    },
+    {
+      "number": 2,
+      "name": "Endpoints (Ollama wired)",
+      "goal": "Against a real Ollama, OpenAI SDK can call `models.list()`, `chat.completions.create` (streaming + non-streaming), and `embeddings.create` end-to-end; capability and tools gating enforced; MLX and Docker Model Runner adapters return 501 from every method.",
+      "status": "completed",
+      "branch": "phase/local-ai-server/2-endpoints",
+      "architecture_file": "pm/v0_1_0/phase-2-architecture.md",
+      "completed_at": "2026-06-15T15:30:00Z"
+    },
+    {
+      "number": 3,
+      "name": "Tests + docs",
+      "goal": "Live integration tests against a real Ollama pass; stub adapters covered for 501 behavior; `ruff check .` clean; `docker/requirements.txt` parity with runtime deps; README finalized for v0.1.0.",
+      "status": "completed",
+      "branch": "phase/local-ai-server/3-tests-docs",
+      "architecture_file": "pm/v0_1_0/phase-3-architecture.md",
+      "completed_at": "2026-06-16T16:00:00Z"
+    }
+  ],
+  "progress_summary": {
+    "phases_completed": 3,
+    "phases_total": 3
+  }
+}
