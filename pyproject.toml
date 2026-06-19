@@ -14,6 +14,8 @@ dependencies = [
     "starlette<1.0",
     "pyyaml>=6.0",
     "argon2-cffi>=23.1",
+    "structlog>=24.4",
+    "watchfiles>=0.24",
 ]
 
 [dependency-groups]

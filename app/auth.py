@@ -138,10 +138,10 @@ _BEARER_RE: re.Pattern[str] = re.compile(r"^Bearer\s+(\S+)\s*$", re.IGNORECASE)
 PUBLIC_PATHS: frozenset[str] = frozenset(
     {
         "/healthz",
+        "/readyz",
         "/docs",
         "/openapi.json",
         "/redoc",
-        # NOTE: /readyz is added in Phase 2.
     }
 )
 
