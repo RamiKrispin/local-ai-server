@@ -133,9 +133,7 @@ def revoke(db_path: Path, prefix: str) -> bool:
 _HASHER: PasswordHasher = PasswordHasher()
 
 # Bearer header parser — case-insensitive scheme, exactly one whitespace run.
-_BEARER_RE: re.Pattern[str] = re.compile(
-    r"^Bearer\s+(\S+)\s*$", re.IGNORECASE
-)
+_BEARER_RE: re.Pattern[str] = re.compile(r"^Bearer\s+(\S+)\s*$", re.IGNORECASE)
 
 PUBLIC_PATHS: frozenset[str] = frozenset(
     {
