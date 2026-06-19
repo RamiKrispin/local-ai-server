@@ -1,13 +1,13 @@
 ---
 project: local-ai-server
-current_version: v0.1.0
+current_version: v0.2.0
 dev_branch: dev/local-ai-server
-current_phase: 5
+current_phase: 0
 total_phases: 3
-execution_mode: step_by_step
-status: completed
+execution_mode: pending
+status: planning
 created: 2026-06-07
-updated: 2026-06-16
+updated: 2026-06-18
 ---
 
 ## Version History
@@ -15,6 +15,12 @@ updated: 2026-06-16
 | Version | Description | Plan File | Status | Date | PR |
 |---------|-------------|-----------|--------|------|----|
 | v0.1.0 | Skeleton + Ollama path; MLX/Model Runner stubbed at 501. | v0_1_0/development_plan.md | shipped | 2026-06-18 | [#1](https://github.com/RamiKrispin/local-ai-server/pull/1) |
+| v0.2.0 | Auth + Observability — Argon2id key auth, structlog, /readyz, watchfiles hot-reload, mypy cleanups. | v0_2_0/development_plan.md | planning | 2026-06-18 | — |
+
+## Completed Phases (v0.2.0)
+
+| Phase | Name | Branch | Status |
+|-------|------|--------|--------|
 
 ## Completed Phases (v0.1.0)
 
@@ -26,13 +32,12 @@ updated: 2026-06-16
 
 ## Current Phase
 
-**v0.1.0 — SHIPPED.**
-
-- All 3 implementation phases merged into `dev/local-ai-server`.
-- Phase 4 (Docs Agent) delivered `docs/{api-reference,usage-guide,architecture}.md` at commit `f99eed4`.
-- Phase 5 (final summary) closed at commit `4dba13e`.
-- PR [#1](https://github.com/RamiKrispin/local-ai-server/pull/1) open against `main` (2026-06-18).
+v0.2.0 awaiting plan approval (Checkpoint 2).
 
 ## Pending Phases
 
-None — v0.1.0 is closed. Future work tracked under v0.2.0+ (auth + obs), v0.3.0 (containers + TLS), v0.4.0+ (real MLX + Docker Model Runner + host-backend Makefile).
+| Phase | Name | Goal |
+|-------|------|------|
+| 1 | Auth foundation | Argon2id + SQLite key store, bearer middleware on `/v1/*`, key-mint + revoke scripts. `/healthz` + `/readyz` stay public. |
+| 2 | Observability | structlog migration with Authorization redaction, `/readyz` per-backend composition, watchfiles hot-reload of `models.yaml`. |
+| 3 | Tests + mypy + docs | Live integration tests for auth + `/readyz` + hot-reload + redaction; 27 carried-forward `mypy --strict` cleanups; README v0.2.0; `docker/requirements.txt` parity. |

@@ -1,0 +1,403 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-06-18T00:00:00Z",
+  "project": {
+    "name": "local-ai-server",
+    "dev_branch": "dev/local-ai-server",
+    "created_date": "2026-06-07"
+  },
+  "version": {
+    "id": "v0.2.0",
+    "id_underscored": "v0_2_0",
+    "description": "Auth + Observability — Argon2id key auth, structlog, /readyz, watchfiles hot-reload, mypy cleanups.",
+    "status": "planning",
+    "plan_file": "pm/v0_2_0/development_plan.md",
+    "log_file": "pm/v0_2_0/log.json",
+    "created_date": "2026-06-18",
+    "updated_at": "2026-06-18T00:00:00Z"
+  },
+  "overview": {
+    "summary": "layer API-key authentication and structured observability onto the v0.1.0 OpenAI-compatible gateway, hardening the LAN-internal seam that v0.1.0 deliberately left open. Additive, non-breaking — same wire shapes, same routing, same SDK clients. Argon2id-backed bearer auth on `/v1/*` with a SQLite key store; `structlog` JSON logging with `Authorization` redaction and per-request `key_prefix`; `/readyz` per-backend health composition over the existing `app.state.adapters[*].health()` seam; `watchfiles`-driven hot-reload of `config/models.yaml` with atomic registry swap; mypy `--strict` clean-up of the 27 findings carried forward from v0.1.0 Phase 3.",
+    "requirements": [
+      "API-key authentication — bearer token `sk-local-...` required on all `/v1/*` routes; `/healthz` and `/readyz` remain public; key format and SQLite schema match spec §7.1–§7.2 (`prefix` PK + `argon2id_hash` + `created_at` / `last_used_at` / `revoked_at` / `name`).",
+      "Argon2id verification — never store plaintext; verify per request via `argon2-cffi`'s `PasswordHasher().verify()`; constant-time compare via the library; touch `last_used_at` on success.",
+      "Key-mint and revoke CLIs — `python scripts/generate_api_key.py --name <name>` prints `sk-local-...` exactly once and writes the row; `python scripts/revoke_api_key.py --prefix <prefix>` sets `revoked_at`.",
+      "OpenAI envelope on auth failures — 401 (missing / malformed / unknown / revoked / hash mismatch) returns `{\"error\": {\"type\": \"invalid_request_error\", \"message\": \"...\", \"param\": \"Authorization\", \"code\": \"invalid_api_key\"}}`; SDK clients see the same shape they get from OpenAI.",
+      "`/readyz` per-backend composition — fans out to every `app.state.adapters[backend].health()`; returns 200 if any backend reachable with a payload listing per-backend status; returns 503 with the same envelope only if every backend is unreachable.",
+      "Structured JSON logging — replace stdlib `logging` with `structlog` everywhere; per-request fields per spec §8 (`key_prefix`, `model`, `backend`, `stream`, `status`, `latency_ms`, `prompt_tokens`, `completion_tokens`); global redaction of `Authorization` headers; stdout-only.",
+      "Hot-reload of `config/models.yaml` — `watchfiles` watches the file; on change, the registry rebuilds atomically (whole `Registry` instance swap, never in-place mutation); no process restart; in-flight requests complete against the registry snapshot they entered with.",
+      "mypy `--strict` clean — clear the 27 findings flagged in `pm/v0_1_0/phase-3-architecture.md` §11 row 2, plus any new findings introduced by auth and observability code.",
+      "Dev-container parity — `docker/requirements.txt` extended with `argon2-cffi`, `structlog`, `watchfiles` so the dev environment matches the gateway runtime.",
+      "Notebook demos — auth flow notebook (key-mint + authenticated request + 401 path) in Phase 1; `/readyz` + hot-reload notebook in Phase 2; no notebook in Phase 3."
+    ],
+    "technology_stack": [
+      "FastAPI",
+      "Python 3.12",
+      "uvicorn",
+      "uv",
+      "SQLite",
+      "argon2-cffi",
+      "structlog",
+      "watchfiles",
+      "Ollama",
+      "httpx",
+      "pytest",
+      "mypy",
+      "ruff"
+    ],
+    "total_phases": 3
+  },
+  "plan": {
+    "gantt": [
+      {
+        "id": "p1a",
+        "name": "KEYS_DB_PATH + .env + gitignore",
+        "section": "Phase 1 - Auth foundation",
+        "start_date": "2026-06-18",
+        "duration_days": 1,
+        "depends_on": null
+      },
+      {
+        "id": "p1b",
+        "name": "SQLite schema + key-store helpers",
+        "section": "Phase 1 - Auth foundation",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p1a"
+      },
+      {
+        "id": "p1c",
+        "name": "scripts/generate + revoke",
+        "section": "Phase 1 - Auth foundation",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p1b"
+      },
+      {
+        "id": "p1d",
+        "name": "BearerAuthMiddleware + Argon2 verify",
+        "section": "Phase 1 - Auth foundation",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p1c"
+      },
+      {
+        "id": "p1e",
+        "name": "main.py mount + auth notebook",
+        "section": "Phase 1 - Auth foundation",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p1d"
+      },
+      {
+        "id": "p2a",
+        "name": "structlog config + redaction",
+        "section": "Phase 2 - Observability",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p1e"
+      },
+      {
+        "id": "p2b",
+        "name": "RequestLoggingMiddleware",
+        "section": "Phase 2 - Observability",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p2a"
+      },
+      {
+        "id": "p2c",
+        "name": "/readyz fan-out",
+        "section": "Phase 2 - Observability",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p2b"
+      },
+      {
+        "id": "p2d",
+        "name": "watchfiles + atomic swap + notebook",
+        "section": "Phase 2 - Observability",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p2c"
+      },
+      {
+        "id": "p3a",
+        "name": "auth + keys_db tests",
+        "section": "Phase 3 - Tests + mypy + docs",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p2d"
+      },
+      {
+        "id": "p3b",
+        "name": "/readyz + hot-reload + logging tests",
+        "section": "Phase 3 - Tests + mypy + docs",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p3a"
+      },
+      {
+        "id": "p3c",
+        "name": "mypy --strict cleanup (27 carryover)",
+        "section": "Phase 3 - Tests + mypy + docs",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p3b"
+      },
+      {
+        "id": "p3d",
+        "name": "README + docker reqs + ruff",
+        "section": "Phase 3 - Tests + mypy + docs",
+        "start_date": null,
+        "duration_days": 1,
+        "depends_on": "p3c"
+      }
+    ],
+    "loe": {
+      "rows": [
+        {
+          "phase": "1 - Auth foundation",
+          "component": "`app/config.py` extension (`KEYS_DB_PATH`)",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "One field on an existing pydantic-settings class."
+        },
+        {
+          "phase": "1 - Auth foundation",
+          "component": "`config/.env.example` + `.gitignore` extension",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Mechanical."
+        },
+        {
+          "phase": "1 - Auth foundation",
+          "component": "SQLite schema + key-store helpers (`insert`, `get_row`, `touch`, `revoke`)",
+          "complexity": "Medium",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Schema is pinned by spec §7.2; standard `sqlite3` plumbing with parameterized queries."
+        },
+        {
+          "phase": "1 - Auth foundation",
+          "component": "`scripts/generate_api_key.py` (urlsafe gen + Argon2 hash + insert + print-once)",
+          "complexity": "Medium",
+          "model": "Opus",
+          "agent": "Architect",
+          "rationale": "\"Print plaintext exactly once\" is a security-load-bearing UX choice; CLI ergonomics matter."
+        },
+        {
+          "phase": "1 - Auth foundation",
+          "component": "`scripts/revoke_api_key.py`",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Trivial UPDATE."
+        },
+        {
+          "phase": "1 - Auth foundation",
+          "component": "`app/auth.py` — `BearerAuthMiddleware` + `verify()` + public-path allowlist",
+          "complexity": "High",
+          "model": "Opus",
+          "agent": "Architect",
+          "rationale": "ASGI middleware ordering, async DB access, Argon2 verify error mapping, OpenAI envelope on 401, websocket/lifespan scope pass-through. Load-bearing security seam."
+        },
+        {
+          "phase": "1 - Auth foundation",
+          "component": "`app/main.py` middleware mount in `create_app()`",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "One `add_middleware` line plus an import; ordering is spelled out in §4.5."
+        },
+        {
+          "phase": "1 - Auth foundation",
+          "component": "`posts/v0_2_0_auth_demo.ipynb`",
+          "complexity": "Medium",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Notebook narrative + standard openai SDK calls; key-mint cell uses subprocess."
+        },
+        {
+          "phase": "2 - Observability",
+          "component": "`app/logging.py` (structlog config + Authorization redactor)",
+          "complexity": "Medium",
+          "model": "Opus",
+          "agent": "Architect",
+          "rationale": "Processor-chain ordering and the redaction predicate are subtle; getting it wrong leaks tokens."
+        },
+        {
+          "phase": "2 - Observability",
+          "component": "`app/middleware_logging.py` (per-request structured event)",
+          "complexity": "Medium",
+          "model": "Opus",
+          "agent": "Architect",
+          "rationale": "Reading `model` from a JSON body without consuming it for the downstream router (must `body()` re-issue) is the core gotcha."
+        },
+        {
+          "phase": "2 - Observability",
+          "component": "`app/main.py` — replace stdlib logging calls with structlog binders + start watcher task",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Mechanical sweep."
+        },
+        {
+          "phase": "2 - Observability",
+          "component": "`app/routers/health.py` extension — `/readyz` fan-out",
+          "complexity": "Medium",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "`asyncio.gather(return_exceptions=True)` over `app.state.adapters`; routing logic is small."
+        },
+        {
+          "phase": "2 - Observability",
+          "component": "`app/registry_watcher.py` (watchfiles task + atomic swap)",
+          "complexity": "High",
+          "model": "Opus",
+          "agent": "Architect",
+          "rationale": "Race-window analysis (in-flight requests vs swap), cancel-safety on lifespan shutdown, error containment when a malformed YAML is saved."
+        },
+        {
+          "phase": "2 - Observability",
+          "component": "`posts/v0_2_0_readyz_hotreload_demo.ipynb`",
+          "complexity": "Medium",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Demonstrate, don't design."
+        },
+        {
+          "phase": "3 - Tests + mypy + docs",
+          "component": "`tests/conftest.py` extensions (`temp_keys_db`, `client_with_auth`)",
+          "complexity": "Medium",
+          "model": "Sonnet",
+          "agent": "QA",
+          "rationale": "Fixture wiring; pytest patterns."
+        },
+        {
+          "phase": "3 - Tests + mypy + docs",
+          "component": "`tests/test_auth.py` (401 / 403 / 200 paths)",
+          "complexity": "Medium",
+          "model": "Opus",
+          "agent": "QA",
+          "rationale": "Edge-case enumeration: missing / malformed / unknown / revoked / hash mismatch / valid; envelope shape assertions."
+        },
+        {
+          "phase": "3 - Tests + mypy + docs",
+          "component": "`tests/test_keys_db.py`",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "QA",
+          "rationale": "Direct CRUD over the helpers."
+        },
+        {
+          "phase": "3 - Tests + mypy + docs",
+          "component": "`tests/test_readyz.py` (live + httpx-mocked unreachable)",
+          "complexity": "Medium",
+          "model": "Sonnet",
+          "agent": "QA",
+          "rationale": "Mix of live and mock; standard pytest-httpx."
+        },
+        {
+          "phase": "3 - Tests + mypy + docs",
+          "component": "`tests/test_hot_reload.py` (mutate yaml, poll /v1/models)",
+          "complexity": "Medium",
+          "model": "Opus",
+          "agent": "QA",
+          "rationale": "Timing-sensitive — needs deterministic polling + atomic-swap assertion via id check."
+        },
+        {
+          "phase": "3 - Tests + mypy + docs",
+          "component": "`tests/test_logging.py` (structured fields + redaction grep)",
+          "complexity": "Medium",
+          "model": "Opus",
+          "agent": "QA",
+          "rationale": "Hooking structlog's renderer in tests is non-obvious; redaction grep is the load-bearing security check."
+        },
+        {
+          "phase": "3 - Tests + mypy + docs",
+          "component": "Existing tests modified for auth header",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "QA",
+          "rationale": "Mechanical fixture swap."
+        },
+        {
+          "phase": "3 - Tests + mypy + docs",
+          "component": "mypy `--strict` cleanup (27 carryover + new from auth/obs)",
+          "complexity": "Medium",
+          "model": "Opus",
+          "agent": "Architect",
+          "rationale": "Each finding needs a real fix (not `# type: ignore`); pulling on one thread (e.g. `errors.py` handler signatures) often surfaces several."
+        },
+        {
+          "phase": "3 - Tests + mypy + docs",
+          "component": "README v0.2.0 rewrite (auth section, key mint flow, /readyz, hot-reload)",
+          "complexity": "Medium",
+          "model": "Opus",
+          "agent": "Architect",
+          "rationale": "Public-facing doc; tone + accuracy."
+        },
+        {
+          "phase": "3 - Tests + mypy + docs",
+          "component": "`docker/requirements.txt` extension",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Three lines."
+        },
+        {
+          "phase": "3 - Tests + mypy + docs",
+          "component": "`pyproject.toml` version bump + 3 deps",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "Builder",
+          "rationale": "Mechanical."
+        },
+        {
+          "phase": "3 - Tests + mypy + docs",
+          "component": "Final `ruff check .` pass",
+          "complexity": "Low",
+          "model": "Sonnet",
+          "agent": "QA",
+          "rationale": "Should be already clean (the v0.1.0 `quote-style` fix is in place); confirm and commit."
+        }
+      ]
+    }
+  },
+  "phases": [
+    {
+      "number": 1,
+      "name": "Auth foundation",
+      "goal": "Argon2id + SQLite key store, bearer middleware on `/v1/*`, key-mint + revoke scripts. `/healthz` + `/readyz` stay public.",
+      "status": "pending",
+      "branch": null,
+      "architecture_file": null,
+      "completed_at": null
+    },
+    {
+      "number": 2,
+      "name": "Observability",
+      "goal": "structlog migration with Authorization redaction, `/readyz` per-backend composition (uses existing `BackendAdapter.health()` seam), watchfiles hot-reload of `models.yaml` with atomic registry swap.",
+      "status": "pending",
+      "branch": null,
+      "architecture_file": null,
+      "completed_at": null
+    },
+    {
+      "number": 3,
+      "name": "Tests + mypy + docs",
+      "goal": "Live integration tests for auth + `/readyz` + hot-reload + redaction; 27 carried-forward `mypy --strict` cleanups; README v0.2.0; `docker/requirements.txt` parity for argon2-cffi + structlog + watchfiles.",
+      "status": "pending",
+      "branch": null,
+      "architecture_file": null,
+      "completed_at": null
+    }
+  ],
+  "progress_summary": {
+    "phases_completed": 0,
+    "phases_total": 3
+  }
+}
