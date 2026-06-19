@@ -178,25 +178,56 @@ class RequestLoggingMiddleware:
             body_chunks: list[bytes] = []
             total_size = 0
             abandoned = False
-            more = True
+            abandoned_message: Message | None = None  # non-http.request msg
 
-            while more:
+            while True:
                 message = await receive()
                 if message["type"] != "http.request":
                     # Unexpected message (e.g. http.disconnect).
-                    # Abandon the cache and fall back to passthrough.
+                    # Abandon the cache; stash the message so we can
+                    # replay it to the downstream app.
                     abandoned = True
+                    abandoned_message = message
                     break
                 chunk = message.get("body", b"")
                 total_size += len(chunk)
                 if total_size > _MAX_CACHED_BODY:
-                    # DOS guard: abandon cache, fall back to passthrough.
+                    # DOS guard: abandon cache.  Any bytes already read
+                    # must still be replayed so downstream is not starved.
+                    body_chunks.append(chunk)
                     abandoned = True
                     break
                 body_chunks.append(chunk)
-                more = message.get("more_body", False)
+                if not message.get("more_body", False):
+                    break
 
-            if not abandoned:
+            if abandoned:
+                # Build a replay shim that re-emits every consumed byte
+                # before delegating to the upstream receive.  This ensures
+                # the downstream router never sees a truncated body.
+                replay_list: list[Message] = []
+                if body_chunks:
+                    replay_list.append(
+                        {
+                            "type": "http.request",
+                            "body": b"".join(body_chunks),
+                            # We don't know whether upstream had more; set
+                            # more_body=True so downstream keeps reading.
+                            "more_body": True,
+                        }
+                    )
+                if abandoned_message is not None:
+                    replay_list.append(abandoned_message)
+                replay_iter = iter(replay_list)
+
+                async def abandon_receive() -> Message:
+                    try:
+                        return next(replay_iter)
+                    except StopIteration:
+                        return await receive()
+
+                wrapped_receive = abandon_receive
+            else:
                 full_body = b"".join(body_chunks)
                 body_holder.body = full_body
 
@@ -215,9 +246,6 @@ class RequestLoggingMiddleware:
                     return await receive()
 
                 wrapped_receive = replay_receive
-            else:
-                # Cache abandoned — pass through unmodified.
-                wrapped_receive = receive
         else:
             wrapped_receive = receive
 
