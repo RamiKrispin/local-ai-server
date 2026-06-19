@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.adapters import build_adapters
+from app.auth import BearerAuthMiddleware
 from app.config import get_settings
 from app.errors import install_exception_handlers
 from app.registry import load_registry
@@ -56,9 +57,10 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     """Application factory."""
+    settings = get_settings()
     app = FastAPI(
         title="local-ai-server",
-        version="0.1.0",
+        version="0.2.0",
         description=(
             "OpenAI-compatible local AI gateway. v0.1.0: Ollama "
             "wired; MLX and Docker Model Runner stubbed at 501."
@@ -66,6 +68,10 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     install_exception_handlers(app)
+    app.add_middleware(
+        BearerAuthMiddleware,
+        keys_db_path=settings.keys_db_path,
+    )
     app.include_router(health_router)
     app.include_router(models_router, prefix="/v1")
     app.include_router(chat_router, prefix="/v1")

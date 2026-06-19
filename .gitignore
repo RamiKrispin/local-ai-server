@@ -11,3 +11,7 @@ __pycache__/
 htmlcov/
 .coverage
 *.egg-info/
+# --- local-ai-server v0.2.0 (Phase 1) ---
+data/
+data/*.db
+data/*.db-journal
