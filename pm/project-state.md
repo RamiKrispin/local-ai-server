@@ -2,7 +2,7 @@
 project: local-ai-server
 current_version: v0.2.0
 dev_branch: dev/local-ai-server
-current_phase: 1
+current_phase: 2
 total_phases: 3
 execution_mode: step_by_step
 status: in_progress
@@ -21,6 +21,7 @@ updated: 2026-06-19
 
 | Phase | Name | Branch | Status |
 |-------|------|--------|--------|
+| 1 | Auth foundation | `phase/local-ai-server/1-auth` (merged 2026-06-19, deleted) | completed |
 
 ## Completed Phases (v0.1.0)
 
@@ -32,15 +33,14 @@ updated: 2026-06-19
 
 ## Current Phase
 
-v0.2.0 Phase 1 — Auth foundation: **starting architecture stage**.
+v0.2.0 Phase 2 — Observability: **awaiting architecture stage**.
 
-- Predecessor: v0.1.0 shipped to main at `12d69e7` (PR #1); v0.2.0 plan approved 2026-06-19.
-- Resume entry point: 3.1 (Create Phase Branch) for v0.2.0 Phase 1.
+- Predecessor: Phase 1 (Auth foundation) merged to `dev/local-ai-server` at `d9fba5c` on 2026-06-19.
+- Resume entry point: 3.1 (Create Phase Branch) for v0.2.0 Phase 2.
 
 ## Pending Phases
 
 | Phase | Name | Goal |
 |-------|------|------|
-| 1 | Auth foundation | Argon2id + SQLite key store, bearer middleware on `/v1/*`, key-mint + revoke scripts. `/healthz` + `/readyz` stay public. |
 | 2 | Observability | structlog migration with Authorization redaction, `/readyz` per-backend composition, watchfiles hot-reload of `models.yaml`. |
 | 3 | Tests + mypy + docs | Live integration tests for auth + `/readyz` + hot-reload + redaction; 27 carried-forward `mypy --strict` cleanups; README v0.2.0; `docker/requirements.txt` parity. |
