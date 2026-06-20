@@ -1,9 +1,10 @@
 import asyncio
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from app.adapters.base import BackendAdapter
 from app.errors import make_error
 
 router = APIRouter(tags=["health"])
@@ -34,12 +35,17 @@ async def readyz(request: Request) -> JSONResponse:
         code=no_backends_reachable) and the same backends mapping
         otherwise.
     """
-    adapters = request.app.state.adapters  # {backend_name: BackendAdapter}
+    adapters = cast(
+        dict[str, BackendAdapter], request.app.state.adapters
+    )
     names = sorted(adapters.keys())  # deterministic order in the response
 
-    results = await asyncio.gather(
-        *(adapters[name].health() for name in names),
-        return_exceptions=True,
+    results = cast(
+        list[dict[str, Any] | BaseException],
+        await asyncio.gather(
+            *(adapters[name].health() for name in names),
+            return_exceptions=True,
+        ),
     )
 
     backends: dict[str, Any] = {}

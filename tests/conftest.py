@@ -277,6 +277,8 @@ def captured_log(
     # Import here so the closure captures the module-level function.
     import app.logging as _logging_mod
     import app.main as _main_mod
+    import app.middleware_logging as _mw_logging_mod
+    import app.registry_watcher as _rw_mod
     from app.logging import redact_authorization
 
     def _install_capture() -> None:
@@ -286,6 +288,16 @@ def captured_log(
             wrapper_class=structlog.make_filtering_bound_logger(0),  # NOTSET
             logger_factory=structlog.ReturnLoggerFactory(),
             cache_logger_on_first_use=False,
+        )
+        # Re-bind module-level loggers to the new configuration.
+        # Module-level structlog.get_logger() calls fix the underlying logger
+        # at import time; rebinding ensures events flow through our capture
+        # processor rather than through the stdlib bridge.
+        _mw_logging_mod._log = structlog.get_logger(  # type: ignore[attr-defined]
+            "app.middleware_logging"
+        )
+        _rw_mod._log = structlog.get_logger(  # type: ignore[attr-defined]
+            "app.registry_watcher"
         )
 
     saved_config = structlog.get_config()

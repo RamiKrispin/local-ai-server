@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import AsyncIterator
+from typing import Any, AsyncIterator
 
 
 class NotSupportedError(Exception):
@@ -38,9 +38,9 @@ class BackendAdapter(ABC):
     @abstractmethod
     async def chat_completions(
         self,
-        body: dict,
+        body: dict[str, Any],
         stream: bool,
-    ) -> dict | AsyncIterator[bytes]:
+    ) -> dict[str, Any] | AsyncIterator[bytes]:
         """Forward a chat completion request to the upstream backend.
 
         When stream=False, return the parsed JSON response body.
@@ -52,12 +52,12 @@ class BackendAdapter(ABC):
         ...
 
     @abstractmethod
-    async def embeddings(self, body: dict) -> dict:
+    async def embeddings(self, body: dict[str, Any]) -> dict[str, Any]:
         """Forward an embeddings request; return parsed JSON response."""
         ...
 
     @abstractmethod
-    async def health(self) -> dict:
+    async def health(self) -> dict[str, Any]:
         """Return {"status": "ok"|"unreachable", ...} for /readyz (Phase 3)."""
         ...
 

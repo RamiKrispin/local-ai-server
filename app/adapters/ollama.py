@@ -1,5 +1,5 @@
 import logging
-from typing import AsyncGenerator, AsyncIterator
+from typing import Any, AsyncGenerator, AsyncIterator, cast
 
 import httpx
 
@@ -36,19 +36,19 @@ class OllamaAdapter(BackendAdapter):
 
     async def chat_completions(
         self,
-        body: dict,
+        body: dict[str, Any],
         stream: bool,
-    ) -> dict | AsyncIterator[bytes]:
+    ) -> dict[str, Any] | AsyncIterator[bytes]:
         if not stream:
             r = await self._client.post(
                 "/v1/chat/completions", json=body
             )
             r.raise_for_status()
-            return r.json()
+            return cast(dict[str, Any], r.json())
         return self._stream(body)
 
     async def _stream(
-        self, body: dict
+        self, body: dict[str, Any]
     ) -> AsyncGenerator[bytes, None]:
         try:
             async with self._client.stream(
@@ -66,18 +66,18 @@ class OllamaAdapter(BackendAdapter):
             # closed. No additional aclose() needed.
             pass
 
-    async def embeddings(self, body: dict) -> dict:
+    async def embeddings(self, body: dict[str, Any]) -> dict[str, Any]:
         r = await self._client.post(
             "/v1/embeddings", json=body
         )
         r.raise_for_status()
-        return r.json()
+        return cast(dict[str, Any], r.json())
 
-    async def health(self) -> dict:
+    async def health(self) -> dict[str, Any]:
         try:
             r = await self._client.get("/api/tags")
             r.raise_for_status()
-            payload = r.json() or {}
+            payload = cast(dict[str, Any], r.json() or {})
             names = [
                 m.get("name")
                 for m in payload.get("models", [])

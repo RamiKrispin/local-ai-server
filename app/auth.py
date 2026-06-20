@@ -5,7 +5,7 @@ import sqlite3
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from argon2 import PasswordHasher
 from argon2.exceptions import (
@@ -164,14 +164,16 @@ class BearerAuthMiddleware:
             return
 
         # 2. Public-path allowlist — exact match only.
-        path: str = scope["path"]
+        path: str = cast(str, scope["path"])
         if path in PUBLIC_PATHS:
             await self.app(scope, receive, send)
             return
 
         # 3. Extract Authorization header.
         auth_value: str | None = None
-        headers: list[tuple[bytes, bytes]] = scope.get("headers", [])
+        headers: list[tuple[bytes, bytes]] = cast(
+            list[tuple[bytes, bytes]], scope.get("headers", [])
+        )
         for name_bytes, value_bytes in headers:
             if name_bytes.lower() == b"authorization":
                 auth_value = value_bytes.decode("ascii", errors="replace")
@@ -224,7 +226,8 @@ class BearerAuthMiddleware:
         await asyncio.to_thread(touch, self.keys_db_path, prefix)
 
         # 9. Attach key_prefix to scope state.
-        scope.setdefault("state", {})["key_prefix"] = prefix
+        state = cast(dict[str, Any], scope.setdefault("state", {}))
+        state["key_prefix"] = prefix
 
         # 10. Pass through to the downstream app.
         await self.app(scope, receive, send)

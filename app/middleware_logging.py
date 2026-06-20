@@ -1,6 +1,7 @@
 import json
 import logging
 import time
+from typing import Any, Awaitable, Callable, cast
 
 import structlog
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
@@ -135,10 +136,12 @@ def _resolve_backend(scope: Scope, model: str | None) -> str | None:
     # scope["app"] is the FastAPI instance (Starlette sets this on http
     # scopes that flow through a Starlette router). app.state.registry
     # is the current registry reference; reads are atomic.
+    from app.registry import Registry
+
     app = scope.get("app")
     if app is None:
         return None
-    registry = getattr(app.state, "registry", None)
+    registry = cast(Registry | None, getattr(app.state, "registry", None))
     if registry is None:
         return None
     found = registry.get(model)
@@ -166,8 +169,8 @@ class RequestLoggingMiddleware:
             return
 
         start_time = time.perf_counter()
-        path: str = scope["path"]
-        method: str = scope.get("method", "?")
+        path: str = cast(str, scope["path"])
+        method: str = cast(str, scope.get("method", "?"))
 
         body_holder = _BodyHolder()
         status_holder = _StatusHolder()
@@ -226,7 +229,9 @@ class RequestLoggingMiddleware:
                     except StopIteration:
                         return await receive()
 
-                wrapped_receive = abandon_receive
+                wrapped_receive: Callable[[], Awaitable[Message]] = (
+                    abandon_receive
+                )
             else:
                 full_body = b"".join(body_chunks)
                 body_holder.body = full_body
@@ -278,7 +283,12 @@ class RequestLoggingMiddleware:
             await self.app(scope, wrapped_receive, capturing_send)
         finally:
             latency_ms = int((time.perf_counter() - start_time) * 1000)
-            key_prefix = scope.get("state", {}).get("key_prefix")
+            state_dict = cast(
+                dict[str, Any], scope.get("state") or {}
+            )
+            key_prefix: str | None = cast(
+                str | None, state_dict.get("key_prefix")
+            )
             model = _extract_model(path, body_holder.body)
             backend = _resolve_backend(scope, model)
             stream_flag = _extract_stream(path, body_holder.body)

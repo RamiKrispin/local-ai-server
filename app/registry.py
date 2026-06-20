@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from collections.abc import Iterator
 
 import yaml
 
@@ -39,7 +40,7 @@ class Registry:
         """O(1) lookup; returns None if not found."""
         return self._by_id.get(model_id)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator["Model"]:
         """Iterate models in source order."""
         return iter(self.models)
 
