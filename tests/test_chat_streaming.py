@@ -11,8 +11,8 @@ Each test must close its streaming response explicitly.  We use the
 if an assertion fails midway.  This prevents hanging connections from
 leaking into subsequent tests.
 
-The `client` fixture is function-scoped so each test gets a fresh app
-instance + fresh adapter dict + fresh httpx.AsyncClient; there is no
+The `client_with_auth` fixture is function-scoped so each test gets a fresh
+app instance + fresh adapter dict + fresh httpx.AsyncClient; there is no
 cross-test state.
 
 Asserting an exact chunk count is brittle (depends on Ollama version and
@@ -57,13 +57,15 @@ def _collect_sse_lines(response) -> list[str]:
 
 @pytest.mark.live
 def test_chat_streaming_live_ollama_yields_data_chunks(
-    client: TestClient,
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
 ) -> None:
     """Streaming response returns 200 with text/event-stream content type
     and at least one parseable data: chunk."""
-    with client.stream(
+    with client_with_auth.stream(
         "POST",
         "/v1/chat/completions",
+        headers=auth_headers,
         json={
             "model": "ollama-llama3",
             "messages": [
@@ -92,7 +94,8 @@ def test_chat_streaming_live_ollama_yields_data_chunks(
 
 @pytest.mark.live
 def test_chat_streaming_live_ollama_terminates_with_done(
-    client: TestClient,
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
 ) -> None:
     """The stream terminates with the exact sentinel 'data: [DONE]'.
 
@@ -100,9 +103,10 @@ def test_chat_streaming_live_ollama_terminates_with_done(
     synthesize it (spec §5.3).  We use substring search on the collected
     body to tolerate trailing-whitespace differences.
     """
-    with client.stream(
+    with client_with_auth.stream(
         "POST",
         "/v1/chat/completions",
+        headers=auth_headers,
         json={
             "model": "ollama-llama3",
             "messages": [
@@ -123,14 +127,16 @@ def test_chat_streaming_live_ollama_terminates_with_done(
 
 @pytest.mark.live
 def test_chat_streaming_live_ollama_delta_concatenation_nonempty(
-    client: TestClient,
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
 ) -> None:
     """Concatenating delta.content across all chunks produces a non-empty
     string, locking the chunk-ordering / delta-semantics for SDK consumers.
     """
-    with client.stream(
+    with client_with_auth.stream(
         "POST",
         "/v1/chat/completions",
+        headers=auth_headers,
         json={
             "model": "ollama-llama3",
             "messages": [
@@ -161,15 +167,17 @@ def test_chat_streaming_live_ollama_delta_concatenation_nonempty(
 
 @pytest.mark.live
 def test_chat_streaming_live_ollama_sse_headers_present(
-    client: TestClient,
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
 ) -> None:
     """SSE_HEADERS from app/routers/chat.py must be present:
       Cache-Control: no-cache
       X-Accel-Buffering: no
     """
-    with client.stream(
+    with client_with_auth.stream(
         "POST",
         "/v1/chat/completions",
+        headers=auth_headers,
         json={
             "model": "ollama-llama3",
             "messages": [
@@ -194,12 +202,14 @@ def test_chat_streaming_live_ollama_sse_headers_present(
 
 
 def test_chat_streaming_capability_gate_returns_501_no_stream(
-    client: TestClient,
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
 ) -> None:
     """stream=True with a model lacking [chat] returns 501 as a JSON
     envelope (NOT an SSE stream) — capability gate fires first."""
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/chat/completions",
+        headers=auth_headers,
         json={
             "model": "ollama-nomic-embed",
             "messages": [{"role": "user", "content": "hi"}],
@@ -213,13 +223,15 @@ def test_chat_streaming_capability_gate_returns_501_no_stream(
 
 
 def test_chat_streaming_tools_gate_returns_400_no_stream(
-    client: TestClient,
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
 ) -> None:
     """stream=True with a chat-capable model + tools (but model lacks
     [tools]) returns 400 as JSON — tools gate fires before streaming
     branch."""
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/chat/completions",
+        headers=auth_headers,
         json={
             "model": "mlx-mistral",
             "messages": [{"role": "user", "content": "hi"}],
