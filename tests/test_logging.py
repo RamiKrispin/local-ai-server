@@ -33,11 +33,14 @@ Test inventory (17 tests):
 import json
 import logging as stdlib_logging
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
+import pytest
 import structlog
 from fastapi.testclient import TestClient
+from pytest_httpx import HTTPXMock
 
 from app.logging import _scrub, configure_structlog, redact_authorization
 
@@ -165,7 +168,7 @@ def test_logging_request_event_for_chat_completions_carries_model_backend(
     captured_log: list[dict[str, Any]],
     client_with_auth: TestClient,
     auth_headers: dict[str, str],
-    httpx_mock: Any,
+    httpx_mock: HTTPXMock,
 ) -> None:
     """POST /v1/chat/completions emits request event with model and backend."""
     fake_response = json.dumps(
@@ -215,7 +218,7 @@ def test_logging_streaming_request_event_emits_null_usage(
     captured_log: list[dict[str, Any]],
     client_with_auth: TestClient,
     auth_headers: dict[str, str],
-    httpx_mock: Any,
+    httpx_mock: HTTPXMock,
 ) -> None:
     """Streaming response without usage block yields null token counts."""
     # SSE chunks without a usage field.
@@ -353,7 +356,24 @@ def test_logging_invalid_request_validation_carries_key_prefix(
 # ---------------------------------------------------------------------------
 
 
-def test_logging_configure_structlog_sets_stdout_handler() -> None:
+@pytest.fixture
+def restore_root_logger() -> Iterator[None]:
+    """Snapshot and restore the stdlib root logger level and handlers.
+
+    Applied only to tests that call configure_structlog() directly, which
+    mutates the root logger. Scoped to individual tests via opt-in.
+    """
+    root = stdlib_logging.getLogger()
+    saved_level = root.level
+    saved_handlers = root.handlers[:]
+    yield
+    root.setLevel(saved_level)
+    root.handlers = saved_handlers
+
+
+def test_logging_configure_structlog_sets_stdout_handler(
+    restore_root_logger: None,
+) -> None:
     """After configure_structlog('INFO'), root logger has a stdout handler."""
     configure_structlog("INFO")
     root = stdlib_logging.getLogger()
@@ -362,7 +382,9 @@ def test_logging_configure_structlog_sets_stdout_handler() -> None:
     ), "No stdout StreamHandler on root logger after configure_structlog"
 
 
-def test_logging_configure_structlog_unknown_level_falls_back_to_info() -> None:
+def test_logging_configure_structlog_unknown_level_falls_back_to_info(
+    restore_root_logger: None,
+) -> None:
     """configure_structlog with an unknown level does not raise."""
     configure_structlog("NOT_A_LEVEL")
     root = stdlib_logging.getLogger()

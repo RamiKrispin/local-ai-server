@@ -25,7 +25,7 @@ dev = [
     "pytest-httpx>=0.30",
     "ruff>=0.6",
     "mypy>=1.11",
-    "types-PyYAML>=6.0",
+    "types-PyYAML>=6.0",  # Phase 3 mypy --strict: stubs for yaml.safe_load() return-type narrowing
 ]
 
 [tool.uv]

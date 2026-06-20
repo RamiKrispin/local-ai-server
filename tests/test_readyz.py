@@ -14,9 +14,10 @@ the real middleware stack and confirm that /readyz bypasses auth.
 import httpx
 import pytest
 from fastapi.testclient import TestClient
+from pytest_httpx import HTTPXMock
 
 
-def _mock_ollama_unreachable(httpx_mock) -> None:
+def _mock_ollama_unreachable(httpx_mock: HTTPXMock) -> None:
     """Helper: configure httpx_mock to raise ConnectError on /api/tags."""
     httpx_mock.add_exception(
         httpx.ConnectError("simulated"),
@@ -81,7 +82,7 @@ def test_readyz_per_backend_payload_shape(
 
 def test_readyz_all_unreachable_returns_503(
     client_with_auth: TestClient,
-    httpx_mock,
+    httpx_mock: HTTPXMock,
 ) -> None:
     """When Ollama's /api/tags raises ConnectError: 503 with the OpenAI
     error envelope and a backends map."""
@@ -101,7 +102,7 @@ def test_readyz_all_unreachable_returns_503(
 
 def test_readyz_envelope_extends_openai_shape(
     client_with_auth: TestClient,
-    httpx_mock,
+    httpx_mock: HTTPXMock,
 ) -> None:
     """On 503, body.error matches the 4-key OpenAI envelope shape exactly."""
     _mock_ollama_unreachable(httpx_mock)
@@ -117,7 +118,7 @@ def test_readyz_envelope_extends_openai_shape(
 
 def test_readyz_status_field_is_binary(
     client_with_auth: TestClient,
-    httpx_mock,
+    httpx_mock: HTTPXMock,
 ) -> None:
     """503 path has NO top-level 'status' field (OpenAI envelope, not a
     status payload). Locks the binary 200/503, no 'degraded' decision."""

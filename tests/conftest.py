@@ -41,7 +41,6 @@ from argon2 import PasswordHasher
 from fastapi.testclient import TestClient
 
 from app.auth import PREFIX_LEN, _init_db, insert
-from app.config import get_settings  # noqa: F401
 from app.main import create_app
 from app.registry import Registry
 
@@ -293,10 +292,14 @@ def captured_log(
         # Module-level structlog.get_logger() calls fix the underlying logger
         # at import time; rebinding ensures events flow through our capture
         # processor rather than through the stdlib bridge.
-        _mw_logging_mod._log = structlog.get_logger(  # type: ignore[attr-defined]
+        # Module-level structlog loggers are bound at import time; rebinding
+        # here ensures events flow through our capture processor.
+        _mw_logging_mod._log = structlog.get_logger(  # type: ignore[attr-defined]  # module-level structlog logger; suppression is intentional
             "app.middleware_logging"
         )
-        _rw_mod._log = structlog.get_logger(  # type: ignore[attr-defined]
+        # Module-level structlog loggers are bound at import time; rebinding
+        # here ensures events flow through our capture processor.
+        _rw_mod._log = structlog.get_logger(  # type: ignore[attr-defined]  # module-level structlog logger; suppression is intentional
             "app.registry_watcher"
         )
 
@@ -335,7 +338,7 @@ def tmp_models_yaml(tmp_path: Path) -> Path:
         this path BEFORE constructing the app so the registry watcher
         watches the temp file.
     """
-    src = Path("config/models.yaml")
+    src = Path(__file__).resolve().parent.parent / "config" / "models.yaml"
     dst = tmp_path / "models.yaml"
     shutil.copy(src, dst)
     return dst
