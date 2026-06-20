@@ -36,15 +36,19 @@ _TOOLS_PAYLOAD = [
 
 
 @pytest.mark.live
-def test_chat_non_stream_live_ollama(client: TestClient) -> None:
+def test_chat_non_stream_live_ollama(
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
+) -> None:
     """Non-streaming chat against real Ollama.
 
     Assertions are intentionally loose (no content pinning) because
     LLM output is non-deterministic across Ollama versions.  temperature=0
     reduces variance but does not guarantee exact text.
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/chat/completions",
+        headers=auth_headers,
         json={
             "model": "ollama-llama3",
             "messages": [
@@ -78,13 +82,17 @@ def test_chat_non_stream_live_ollama(client: TestClient) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_chat_unknown_model_returns_404(client: TestClient) -> None:
+def test_chat_unknown_model_returns_404(
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
+) -> None:
     """Unknown model id → 404 with model_not_found code.
 
     Error-path row 1 (phase-3-architecture.md §7).
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/chat/completions",
+        headers=auth_headers,
         json={
             "model": "does-not-exist",
             "messages": [{"role": "user", "content": "hi"}],
@@ -98,7 +106,8 @@ def test_chat_unknown_model_returns_404(client: TestClient) -> None:
 
 
 def test_chat_capability_gate_no_chat_returns_501(
-    client: TestClient,
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
 ) -> None:
     """A model declaring only [embeddings] returns 501 for chat.
 
@@ -107,8 +116,9 @@ def test_chat_capability_gate_no_chat_returns_501(
 
     Error-path row 3 (phase-3-architecture.md §7).
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/chat/completions",
+        headers=auth_headers,
         json={
             "model": "ollama-nomic-embed",
             "messages": [{"role": "user", "content": "hi"}],
@@ -121,7 +131,8 @@ def test_chat_capability_gate_no_chat_returns_501(
 
 
 def test_chat_tools_gate_chat_only_model_returns_400(
-    client: TestClient,
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
 ) -> None:
     """A model with [chat] but no [tools] returns 400 when tools is sent.
 
@@ -130,8 +141,9 @@ def test_chat_tools_gate_chat_only_model_returns_400(
 
     Error-path row 5 (phase-3-architecture.md §7).
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/chat/completions",
+        headers=auth_headers,
         json={
             "model": "mlx-mistral",
             "messages": [{"role": "user", "content": "hi"}],
@@ -146,7 +158,8 @@ def test_chat_tools_gate_chat_only_model_returns_400(
 
 
 def test_chat_capability_first_ordering_no_chat_with_tools_returns_501(
-    client: TestClient,
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
 ) -> None:
     """A model with no [chat] returns 501 even when the request also has
     tools — the capability gate fires BEFORE the tools gate.
@@ -159,8 +172,9 @@ def test_chat_capability_first_ordering_no_chat_with_tools_returns_501(
     failed on a capability check, not a parameter check.  If this test
     ever returns 400, the gate order has regressed.
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/chat/completions",
+        headers=auth_headers,
         json={
             "model": "ollama-nomic-embed",  # embeddings only, no chat
             "messages": [{"role": "user", "content": "hi"}],
@@ -172,7 +186,10 @@ def test_chat_capability_first_ordering_no_chat_with_tools_returns_501(
     assert error["code"] == "backend_capability_missing"
 
 
-def test_chat_stub_backend_mlx_returns_501(client: TestClient) -> None:
+def test_chat_stub_backend_mlx_returns_501(
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
+) -> None:
     """mlx-mistral (chat-capable, stub backend) returns 501.
 
     Capability gate passes; tools gate not triggered (no tools field);
@@ -180,8 +197,9 @@ def test_chat_stub_backend_mlx_returns_501(client: TestClient) -> None:
 
     Error-path row 7a (phase-3-architecture.md §7).
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/chat/completions",
+        headers=auth_headers,
         json={
             "model": "mlx-mistral",
             "messages": [{"role": "user", "content": "hi"}],
@@ -192,13 +210,17 @@ def test_chat_stub_backend_mlx_returns_501(client: TestClient) -> None:
     assert error["code"] == "not_implemented"
 
 
-def test_chat_stub_backend_dmr_returns_501(client: TestClient) -> None:
+def test_chat_stub_backend_dmr_returns_501(
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
+) -> None:
     """model-runner-llama32 (chat-capable, stub backend) returns 501.
 
     Error-path row 8a (phase-3-architecture.md §7).
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/chat/completions",
+        headers=auth_headers,
         json={
             "model": "model-runner-llama32",
             "messages": [{"role": "user", "content": "hi"}],
@@ -209,7 +231,10 @@ def test_chat_stub_backend_dmr_returns_501(client: TestClient) -> None:
     assert error["code"] == "not_implemented"
 
 
-def test_chat_invalid_body_returns_422(client: TestClient) -> None:
+def test_chat_invalid_body_returns_422(
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
+) -> None:
     """A request body missing the required `messages` field returns 422
     with type='invalid_request_error'.
 
@@ -217,8 +242,9 @@ def test_chat_invalid_body_returns_422(client: TestClient) -> None:
     The validation_exception_handler in app/errors.py converts Pydantic's
     RequestValidationError to the OpenAI envelope.
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/chat/completions",
+        headers=auth_headers,
         json={"model": "ollama-llama3"},  # no messages field
     )
     assert response.status_code == 422

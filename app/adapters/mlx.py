@@ -1,4 +1,4 @@
-from typing import AsyncIterator
+from typing import Any, AsyncIterator
 
 from app.adapters.base import BackendAdapter, NotSupportedError
 
@@ -16,15 +16,15 @@ class MLXAdapter(BackendAdapter):
         self.base_url = base_url.rstrip("/")
 
     async def chat_completions(
-        self, body: dict, stream: bool
-    ) -> dict | AsyncIterator[bytes]:
+        self, body: dict[str, Any], stream: bool
+    ) -> dict[str, Any] | AsyncIterator[bytes]:
         raise NotSupportedError(
             "MLX adapter is not implemented in v0.1.0",
             backend="mlx",
             code="not_implemented",
         )
 
-    async def embeddings(self, body: dict) -> dict:
+    async def embeddings(self, body: dict[str, Any]) -> dict[str, Any]:
         raise NotSupportedError(
             "MLX backend does not support embeddings",
             backend="mlx",
@@ -32,7 +32,7 @@ class MLXAdapter(BackendAdapter):
             code="backend_capability_missing",
         )
 
-    async def health(self) -> dict:
+    async def health(self) -> dict[str, Any]:
         raise NotSupportedError(
             "MLX adapter is not implemented in v0.1.0",
             backend="mlx",

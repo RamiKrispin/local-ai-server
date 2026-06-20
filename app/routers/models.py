@@ -1,7 +1,9 @@
 import time
+from typing import cast
 
 from fastapi import APIRouter, Request
 
+from app.registry import Registry
 from app.schemas import ModelEntry, ModelsListResponse
 
 router = APIRouter(tags=["models"])
@@ -14,7 +16,7 @@ router = APIRouter(tags=["models"])
 )
 async def list_models(request: Request) -> ModelsListResponse:
     """Return the registry as {object: 'list', data: [...]}."""
-    registry = request.app.state.registry
+    registry = cast(Registry, request.app.state.registry)
     now = int(time.time())
     return ModelsListResponse(
         data=[

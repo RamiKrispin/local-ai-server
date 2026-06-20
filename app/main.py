@@ -1,4 +1,5 @@
 import asyncio
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 import structlog
@@ -19,7 +20,7 @@ from app.routers.models import router as models_router
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     configure_structlog(settings.log_level)  # replaces basicConfig
     log = structlog.get_logger("app.main")  # replaces logging.getLogger

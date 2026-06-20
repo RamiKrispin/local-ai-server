@@ -1,3 +1,5 @@
+from typing import Any
+
 from app.adapters.base import BackendAdapter, NotSupportedError
 from app.adapters.ollama import OllamaAdapter
 from app.adapters.mlx import MLXAdapter
@@ -5,7 +7,12 @@ from app.adapters.docker_model_runner import DockerModelRunnerAdapter
 from app.config import Settings
 from app.registry import Registry
 
-_ADAPTER_CLASSES: dict[str, type[BackendAdapter]] = {
+# The value type uses Callable[..., BackendAdapter] semantics; the concrete
+# constructors accept an optional base_url positional argument.  Typing as
+# dict[str, type[Any]] lets mypy accept both cls() and cls(url) call forms
+# without requiring a Protocol — the ABC's abstract contract is checked at
+# the concrete-class level.
+_ADAPTER_CLASSES: dict[str, type[Any]] = {
     "ollama": OllamaAdapter,
     "mlx": MLXAdapter,
     "docker_model_runner": DockerModelRunnerAdapter,

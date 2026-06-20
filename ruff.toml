@@ -5,6 +5,8 @@ indent-width = 4
 [lint]
 extend-select = ["E501"]
 
+[lint.per-file-ignores]
+"tests/**/*.py" = ["E501"]
 
 [format]
 quote-style = "double"

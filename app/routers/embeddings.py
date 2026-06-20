@@ -1,8 +1,10 @@
+from typing import Any, cast
+
 from fastapi import APIRouter, HTTPException, Request, status
 
 from app.adapters.base import BackendAdapter, NotSupportedError
 from app.errors import make_error
-from app.registry import Capability, Model
+from app.registry import Capability, Model, Registry
 from app.schemas import EmbeddingsRequest
 
 router = APIRouter(tags=["embeddings"])
@@ -15,8 +17,8 @@ router = APIRouter(tags=["embeddings"])
 async def embeddings(
     body: EmbeddingsRequest,
     request: Request,
-) -> dict:
-    registry = request.app.state.registry
+) -> dict[str, Any]:
+    registry = cast(Registry, request.app.state.registry)
     adapters: dict[str, BackendAdapter] = (
         request.app.state.adapters
     )

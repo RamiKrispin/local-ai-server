@@ -1,10 +1,10 @@
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import structlog
 from watchfiles import awatch
 
-from app.registry import RegistryError, load_registry
+from app.registry import Registry, RegistryError, load_registry
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
@@ -106,7 +106,7 @@ async def _try_reload(app: "FastAPI", path: str) -> None:
     # Atomic ref swap. Python attribute assignment on an object is
     # one bytecode op (STORE_ATTR); concurrent reads always see either
     # the old or the new reference, never a torn one.
-    old_registry = app.state.registry
+    old_registry = cast(Registry, app.state.registry)
     app.state.registry = new_registry
 
     if new_registry.ids() == old_registry.ids():
