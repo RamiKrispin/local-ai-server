@@ -2,7 +2,7 @@
 project: local-ai-server
 current_version: v0.2.0
 dev_branch: dev/local-ai-server
-current_phase: 2
+current_phase: 3
 total_phases: 3
 execution_mode: step_by_step
 status: in_progress
@@ -22,6 +22,7 @@ updated: 2026-06-19
 | Phase | Name | Branch | Status |
 |-------|------|--------|--------|
 | 1 | Auth foundation | `phase/local-ai-server/1-auth` (merged 2026-06-19, deleted) | completed |
+| 2 | Observability | `phase/local-ai-server/2-observability` (merged 2026-06-19, deleted) | completed |
 
 ## Completed Phases (v0.1.0)
 
@@ -33,14 +34,13 @@ updated: 2026-06-19
 
 ## Current Phase
 
-v0.2.0 Phase 2 — Observability: **awaiting architecture stage**.
+v0.2.0 Phase 3 — Tests + mypy + docs: **awaiting architecture stage**.
 
-- Predecessor: Phase 1 (Auth foundation) merged to `dev/local-ai-server` at `d9fba5c` on 2026-06-19.
-- Resume entry point: 3.1 (Create Phase Branch) for v0.2.0 Phase 2.
+- Predecessor: Phase 2 (Observability) merged to `dev/local-ai-server` at `766cb04` on 2026-06-19.
+- Resume entry point: 3.1 (Create Phase Branch) for v0.2.0 Phase 3.
 
 ## Pending Phases
 
 | Phase | Name | Goal |
 |-------|------|------|
-| 2 | Observability | structlog migration with Authorization redaction, `/readyz` per-backend composition, watchfiles hot-reload of `models.yaml`. |
-| 3 | Tests + mypy + docs | Live integration tests for auth + `/readyz` + hot-reload + redaction; 27 carried-forward `mypy --strict` cleanups; README v0.2.0; `docker/requirements.txt` parity. |
+| 3 | Tests + mypy + docs | Live integration tests for auth + `/readyz` + hot-reload + redaction; 27 carried-forward `mypy --strict` cleanups + Phase 2's +1 finding; README v0.2.0; `docker/requirements.txt` parity. |
