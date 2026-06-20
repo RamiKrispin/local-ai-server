@@ -2,10 +2,10 @@
 project: local-ai-server
 current_version: v0.2.0
 dev_branch: dev/local-ai-server
-current_phase: 3
+current_phase: 4
 total_phases: 3
 execution_mode: step_by_step
-status: awaiting_merge_approval
+status: in_progress
 created: 2026-06-07
 updated: 2026-06-20
 ---
@@ -23,6 +23,7 @@ updated: 2026-06-20
 |-------|------|--------|--------|
 | 1 | Auth foundation | `phase/local-ai-server/1-auth` (merged 2026-06-19, deleted) | completed |
 | 2 | Observability | `phase/local-ai-server/2-observability` (merged 2026-06-19, deleted) | completed |
+| 3 | Tests + mypy + docs | `phase/local-ai-server/3-tests-mypy-docs` (merged 2026-06-20 at `e3d078b`, deleted) | completed |
 
 ## Completed Phases (v0.1.0)
 
@@ -34,17 +35,12 @@ updated: 2026-06-20
 
 ## Current Phase
 
-v0.2.0 Phase 3 — Tests + mypy + docs: **awaiting merge approval**.
+v0.2.0 Phase 4 — Documentation: **awaiting Docs Agent dispatch**.
 
-- Branch: `phase/local-ai-server/3-tests-mypy-docs` (7 commits ahead of `dev/local-ai-server`).
-- Architect: `1be265a` (`pm/v0_2_0/phase-3-architecture.md`).
-- Builder: `d5c20c0`, `4338c12`, `bab73fa`, `ff5eacd`.
-- Fixer: `dd5ca9f`, `c37de3d`.
-- QA status: pytest 100 passed / 0 failed / 13 skipped (live-only); `mypy --strict` zero errors in 20 source files; `ruff check .` clean.
-- Resume entry point: 3.9 (Merge & update state) — re-invoke `/pm-agent` to resume.
+- Predecessor: Phase 3 (Tests + mypy + docs) merged to `dev/local-ai-server` at `e3d078b` on 2026-06-20.
+- All three execution phases of v0.2.0 are complete. Next: Docs Agent regenerates README / API reference / usage guide / architecture doc, then Logger Agent marks v0.2.0 completed.
+- Resume entry point: Phase 4 (Documentation) — Docs Agent.
 
 ## Pending Phases
 
-| Phase | Name | Goal |
-|-------|------|------|
-| 3 | Tests + mypy + docs | Live integration tests for auth + `/readyz` + hot-reload + redaction; 27 carried-forward `mypy --strict` cleanups + Phase 2's +1 finding; README v0.2.0; `docker/requirements.txt` parity. |
+_(none for v0.2.0 execution loop — Phase 4 Docs Agent runs next, then version close.)_
