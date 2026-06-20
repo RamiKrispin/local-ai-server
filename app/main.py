@@ -1,14 +1,17 @@
 import asyncio
-import logging
 from contextlib import asynccontextmanager
 
+import structlog
 from fastapi import FastAPI
 
 from app.adapters import build_adapters
 from app.auth import BearerAuthMiddleware
 from app.config import get_settings
 from app.errors import install_exception_handlers
+from app.logging import configure_structlog
+from app.middleware_logging import RequestLoggingMiddleware
 from app.registry import load_registry
+from app.registry_watcher import start_registry_watcher
 from app.routers.chat import router as chat_router
 from app.routers.embeddings import router as embeddings_router
 from app.routers.health import router as health_router
@@ -18,11 +21,8 @@ from app.routers.models import router as models_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
-    logging.basicConfig(
-        level=settings.log_level,
-        format="%(asctime)s %(levelname)s %(name)s %(message)s",
-    )
-    log = logging.getLogger("app.main")
+    configure_structlog(settings.log_level)  # replaces basicConfig
+    log = structlog.get_logger("app.main")  # replaces logging.getLogger
 
     registry = load_registry(settings.models_yaml_path)
     app.state.registry = registry
@@ -31,15 +31,26 @@ async def lifespan(app: FastAPI):
     adapters = build_adapters(registry, settings)
     app.state.adapters = adapters
     log.info(
-        "registry loaded: %d models (%s); adapters: %s",
-        len(registry.models),
-        ", ".join(registry.ids()),
-        ", ".join(sorted(adapters.keys())),
+        "registry_loaded",
+        n_models=len(registry.models),
+        ids=registry.ids(),
+        adapters=sorted(adapters.keys()),
     )
+
+    # Start the registry watcher.
+    watcher_task: asyncio.Task[None] = start_registry_watcher(app, settings)
 
     try:
         yield
     finally:
+        # Cancel + await the watcher first; it must NOT block adapter close.
+        watcher_task.cancel()
+        try:
+            await watcher_task
+        except asyncio.CancelledError:
+            pass
+
+        # Adapter close — unchanged from Phase 1.
         _keys = sorted(app.state.adapters.keys())
         results = await asyncio.gather(
             *(app.state.adapters[k].close() for k in _keys),
@@ -48,11 +59,11 @@ async def lifespan(app: FastAPI):
         for backend, result in zip(_keys, results):
             if isinstance(result, BaseException):
                 log.warning(
-                    "adapter close failed for %s: %s",
-                    backend,
-                    result,
+                    "adapter_close_failed",
+                    backend=backend,
+                    error=str(result),
                 )
-        log.info("gateway shutdown complete")
+        log.info("gateway_shutdown_complete")
 
 
 def create_app() -> FastAPI:
@@ -68,6 +79,10 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     install_exception_handlers(app)
+    # NOTE: add_middleware order is REVERSED relative to execution order
+    # (Starlette wraps in LIFO). RequestLoggingMiddleware is added FIRST
+    # so it ends up OUTERMOST and times the full request including auth.
+    app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(
         BearerAuthMiddleware,
         keys_db_path=settings.keys_db_path,
