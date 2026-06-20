@@ -1,7 +1,7 @@
 [project]
 name = "local-ai-server"
 version = "0.2.0"
-description = "OpenAI-compatible local AI gateway (v0.1.0: Ollama only)."
+description = "OpenAI-compatible local AI gateway with bearer auth, structured logging, and hot-reload (v0.2.0)."
 requires-python = ">=3.12"
 readme = "README.md"
 license = { text = "CC-BY-NC-SA-4.0" }
