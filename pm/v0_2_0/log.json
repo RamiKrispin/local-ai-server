@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-06-19T12:10:00Z",
+  "generated_at": "2026-06-19T00:00:00Z",
   "project": {
     "name": "local-ai-server",
     "dev_branch": "dev/local-ai-server",
@@ -14,7 +14,7 @@
     "plan_file": "pm/v0_2_0/development_plan.md",
     "log_file": "pm/v0_2_0/log.json",
     "created_date": "2026-06-18",
-    "updated_at": "2026-06-19T12:10:00Z"
+    "updated_at": "2026-06-19T00:00:00Z"
   },
   "overview": {
     "summary": "layer API-key authentication and structured observability onto the v0.1.0 OpenAI-compatible gateway, hardening the LAN-internal seam that v0.1.0 deliberately left open. Additive, non-breaking — same wire shapes, same routing, same SDK clients. Argon2id-backed bearer auth on `/v1/*` with a SQLite key store; `structlog` JSON logging with `Authorization` redaction and per-request `key_prefix`; `/readyz` per-backend health composition over the existing `app.state.adapters[*].health()` seam; `watchfiles`-driven hot-reload of `config/models.yaml` with atomic registry swap; mypy `--strict` clean-up of the 27 findings carried forward from v0.1.0 Phase 3.",
@@ -382,10 +382,11 @@
       "number": 2,
       "name": "Observability",
       "goal": "structlog migration with Authorization redaction, `/readyz` per-backend composition (uses existing `BackendAdapter.health()` seam), watchfiles hot-reload of `models.yaml` with atomic registry swap.",
-      "status": "pending",
-      "branch": null,
-      "architecture_file": null,
-      "completed_at": null
+      "status": "completed",
+      "branch": "phase/local-ai-server/2-observability",
+      "architecture_file": "pm/v0_2_0/phase-2-architecture.md",
+      "completed_at": "2026-06-19T00:00:00Z",
+      "merge_commit": "766cb04"
     },
     {
       "number": 3,
@@ -398,7 +399,7 @@
     }
   ],
   "progress_summary": {
-    "phases_completed": 1,
+    "phases_completed": 2,
     "phases_total": 3
   }
 }
