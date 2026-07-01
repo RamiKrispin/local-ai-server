@@ -81,14 +81,18 @@ async def test_dmr_close_is_noop() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_dmr_routed_chat_returns_501_with_envelope(client) -> None:
+def test_dmr_routed_chat_returns_501_with_envelope(
+    client_with_auth,
+    auth_headers,
+) -> None:
     """POST /v1/chat/completions with model-runner-llama32 (chat-capable)
     returns 501 with error.code='not_implemented'.
 
     Error-path row 8 (phase-3-architecture.md §7).
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/chat/completions",
+        headers=auth_headers,
         json={
             "model": "model-runner-llama32",
             "messages": [{"role": "user", "content": "hi"}],
@@ -99,7 +103,10 @@ def test_dmr_routed_chat_returns_501_with_envelope(client) -> None:
     assert error["code"] == "not_implemented"
 
 
-def test_dmr_routed_embeddings_returns_501_with_envelope(client) -> None:
+def test_dmr_routed_embeddings_returns_501_with_envelope(
+    client_with_auth,
+    auth_headers,
+) -> None:
     """POST /v1/embeddings with model-runner-llama32 (embeddings-capable
     per registry) returns 501 with error.code='not_implemented'.
 
@@ -109,8 +116,9 @@ def test_dmr_routed_embeddings_returns_501_with_envelope(client) -> None:
 
     Error-path row 9 (phase-3-architecture.md §7).
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/embeddings",
+        headers=auth_headers,
         json={
             "model": "model-runner-llama32",
             "input": "hello",

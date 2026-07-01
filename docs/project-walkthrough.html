@@ -1,0 +1,1382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>local-ai-server — Project Walkthrough</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --panel: #161c23;
+    --panel-2: #1d242e;
+    --border: #2a323d;
+    --text: #e2e8ee;
+    --muted: #8a96a4;
+    --dim: #586472;
+    --done: #34d399;
+    --done-bg: rgba(52, 211, 153, 0.12);
+    --done-line: rgba(52, 211, 153, 0.45);
+    --active: #fbbf24;
+    --active-bg: rgba(251, 191, 36, 0.12);
+    --active-line: rgba(251, 191, 36, 0.5);
+    --pending: #6b7785;
+    --pending-bg: rgba(107, 119, 133, 0.1);
+    --pending-line: rgba(107, 119, 133, 0.3);
+    --accent: #60a5fa;
+    --accent-bg: rgba(96, 165, 250, 0.1);
+    --accent-line: rgba(96, 165, 250, 0.4);
+    --code-bg: #0a0e13;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f7f8fa;
+      --panel: #ffffff;
+      --panel-2: #f1f3f6;
+      --border: #e1e6ec;
+      --text: #1a2230;
+      --muted: #5b6776;
+      --dim: #8a96a4;
+      --done: #059669;
+      --done-bg: rgba(5, 150, 105, 0.1);
+      --done-line: rgba(5, 150, 105, 0.4);
+      --active: #d97706;
+      --active-bg: rgba(217, 119, 6, 0.12);
+      --active-line: rgba(217, 119, 6, 0.4);
+      --pending: #94a0ae;
+      --pending-bg: rgba(148, 160, 174, 0.12);
+      --pending-line: rgba(148, 160, 174, 0.3);
+      --accent: #2563eb;
+      --accent-bg: rgba(37, 99, 235, 0.08);
+      --accent-line: rgba(37, 99, 235, 0.35);
+      --code-bg: #f3f4f7;
+      --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.06);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 32px 24px 72px; }
+
+  /* Header */
+  header.top {
+    display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;
+    justify-content: space-between; padding-bottom: 24px;
+    border-bottom: 1px solid var(--border); margin-bottom: 32px;
+  }
+  .title h1 {
+    margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.015em;
+  }
+  .title .sub { color: var(--muted); font-size: 15px; margin-top: 6px;
+    max-width: 720px; }
+  .meta { text-align: right; color: var(--muted); font-size: 13px; }
+  .meta .repo {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
+  }
+
+  /* Pills */
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px; font-size: 12px;
+    font-weight: 500; border: 1px solid;
+  }
+  .pill.active { color: var(--active); background: var(--active-bg);
+    border-color: var(--active-line); }
+  .pill.done   { color: var(--done);   background: var(--done-bg);
+    border-color: var(--done-line); }
+  .pill.pending{ color: var(--pending);background: var(--pending-bg);
+    border-color: var(--pending-line); }
+  .pill.accent { color: var(--accent); background: var(--accent-bg);
+    border-color: var(--accent-line); }
+  .pill .dot { width: 7px; height: 7px; border-radius: 999px;
+    background: currentColor; }
+
+  /* Sections */
+  section { margin: 0 0 48px; scroll-margin-top: 24px; }
+  section > h2 {
+    margin: 0 0 16px; font-size: 22px; font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  section > h2 .num {
+    color: var(--muted); font-weight: 500;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 17px; margin-right: 8px;
+  }
+  section > .lede {
+    color: var(--muted); margin: 0 0 22px; font-size: 15.5px;
+    max-width: 820px;
+  }
+  h3 { font-size: 17px; margin: 28px 0 10px; font-weight: 600; }
+  h4 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); margin: 16px 0 8px; font-weight: 600; }
+  p { margin: 0 0 12px; }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.92em;
+    background: var(--code-bg); padding: 1px 6px; border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; overflow-x: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12.5px; line-height: 1.55; margin: 0 0 14px;
+  }
+  pre code { background: transparent; padding: 0; border: 0; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* TOC */
+  nav.toc {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 22px; margin-bottom: 32px;
+    box-shadow: var(--shadow);
+  }
+  nav.toc h3 { margin: 0 0 10px; font-size: 13px;
+    text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  nav.toc ol {
+    margin: 0; padding-left: 0; list-style: none;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 24px;
+  }
+  @media (max-width: 720px) { nav.toc ol { grid-template-columns: 1fr; } }
+  nav.toc li { font-size: 14px; }
+  nav.toc li::before {
+    content: counter(toc-counter, decimal-leading-zero) "  ";
+    counter-increment: toc-counter;
+    color: var(--dim);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+  }
+  nav.toc ol { counter-reset: toc-counter; }
+
+  /* At-a-glance metrics */
+  .glance {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 720px) { .glance { grid-template-columns: 1fr 1fr; } }
+  .stat {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 18px; box-shadow: var(--shadow);
+  }
+  .stat .v { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+  .stat .k { color: var(--muted); font-size: 12px; text-transform: uppercase;
+    letter-spacing: .04em; margin-top: 4px; }
+
+  /* Mental model — coffee shop analogy */
+  .mental {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 24px; box-shadow: var(--shadow);
+    margin-bottom: 24px;
+  }
+  .mental h3 { margin-top: 0; }
+  .mental p:last-child { margin-bottom: 0; }
+
+  /* Component cards */
+  .components {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+  }
+  @media (max-width: 820px) { .components { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 22px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .card.done { border-top: 3px solid var(--done); }
+  .card.active { border-top: 3px solid var(--active); }
+  .card.pending { border-top: 3px solid var(--pending); }
+  .card.accent { border-top: 3px solid var(--accent); }
+  .card h3 { margin: 0; font-size: 16px; display: flex;
+    align-items: center; gap: 10px; flex-wrap: wrap; }
+  .card .desc { color: var(--muted); font-size: 13.5px; margin-bottom: 4px; }
+  .card ul { margin: 4px 0 0; padding-left: 18px; }
+  .card li { font-size: 13.5px; line-height: 1.55; margin: 3px 0; }
+
+  /* Architecture diagram (CSS grid) */
+  .arch-diag {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px; box-shadow: var(--shadow);
+    overflow-x: auto;
+  }
+  .arch-row {
+    display: grid; gap: 14px; align-items: stretch;
+    margin: 16px 0; min-width: 720px;
+  }
+  .arch-row.r1 { grid-template-columns: 1fr; }
+  .arch-row.r2 { grid-template-columns: 1fr 1fr; }
+  .arch-row.r3 { grid-template-columns: 1fr 1fr 1fr; }
+  .arch-row.r4 { grid-template-columns: repeat(4, 1fr); }
+  .arch-row .lbl {
+    color: var(--muted); font-size: 11px; text-transform: uppercase;
+    letter-spacing: .07em; padding: 4px 0; grid-column: 1 / -1;
+    border-bottom: 1px dashed var(--border); margin-bottom: 4px;
+  }
+  .box {
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px; background: var(--panel-2);
+    font-size: 13.5px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .box .t {
+    font-weight: 600; font-size: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+  }
+  .box .d { color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+  .box.done { border-color: var(--done-line); background: var(--done-bg); }
+  .box.active { border-color: var(--active-line); background: var(--active-bg); }
+  .box.pending {
+    border-color: var(--pending-line); background: var(--pending-bg);
+    color: var(--muted);
+  }
+  .box.accent { border-color: var(--accent-line); background: var(--accent-bg); }
+  .box .ver {
+    font-size: 10.5px; font-weight: 500; padding: 2px 7px;
+    border-radius: 999px; background: var(--panel); color: var(--muted);
+    border: 1px solid var(--border);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .box.done .ver { color: var(--done); border-color: var(--done-line); }
+  .box.active .ver { color: var(--active); border-color: var(--active-line); }
+
+  /* SVG diagram containers */
+  .svg-wrap {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; overflow-x: auto;
+    box-shadow: var(--shadow);
+  }
+  .svg-wrap svg { display: block; max-width: 100%; height: auto; }
+
+  /* Version blocks */
+  .version-block {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 22px 26px; box-shadow: var(--shadow);
+    margin-bottom: 18px; border-left: 4px solid var(--pending);
+  }
+  .version-block.done { border-left-color: var(--done); }
+  .version-block.active { border-left-color: var(--active); }
+  .version-block h3 {
+    margin-top: 0; font-size: 19px; display: flex;
+    align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .version-block .goal {
+    color: var(--muted); font-size: 14px; margin: 0 0 14px;
+  }
+  .version-block .grid2 {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  @media (max-width: 720px) { .version-block .grid2 { grid-template-columns: 1fr; } }
+  .version-block .col h4 { margin-top: 0; }
+  .version-block .col ul { margin: 0; padding-left: 18px; }
+  .version-block .col li { font-size: 13.5px; line-height: 1.55; margin: 3px 0; }
+  .version-block .outcome {
+    margin-top: 14px; padding: 12px 14px; border-radius: 8px;
+    background: var(--panel-2); border: 1px solid var(--border);
+    font-size: 13.5px; line-height: 1.55;
+  }
+  .version-block .outcome strong { color: var(--text); }
+
+  /* Glossary */
+  .glossary {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 24px; box-shadow: var(--shadow);
+  }
+  .glossary dl { margin: 0; }
+  .glossary dt {
+    font-weight: 600; font-size: 14px; margin-top: 14px;
+    color: var(--text);
+  }
+  .glossary dt:first-child { margin-top: 0; }
+  .glossary dd {
+    margin: 4px 0 0; color: var(--muted); font-size: 13.5px;
+    line-height: 1.55;
+  }
+
+  /* Roadmap timeline */
+  .timeline {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px; margin-bottom: 24px;
+  }
+  @media (max-width: 820px) { .timeline { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .timeline { grid-template-columns: 1fr; } }
+  .tl-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow);
+  }
+  .tl-card.done { border-top: 3px solid var(--done); }
+  .tl-card.active { border-top: 3px solid var(--active); }
+  .tl-card.pending { border-top: 3px solid var(--pending); }
+  .tl-card .ver {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 14px; font-weight: 600; margin-bottom: 4px;
+  }
+  .tl-card .ver .pill { font-size: 10px; padding: 2px 7px; margin-left: 6px; }
+  .tl-card .scope { font-size: 13px; color: var(--muted); line-height: 1.5;
+    margin-top: 6px; }
+  .tl-card .effort { color: var(--dim); font-size: 11.5px; margin-top: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  footer {
+    margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--border);
+    color: var(--dim); font-size: 12px; display: flex;
+    justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+  footer a { color: var(--muted); }
+
+  @media print {
+    body { background: white; color: black; }
+    .stat, .card, .arch-diag, .version-block, .glossary, .tl-card,
+    .mental, nav.toc, .svg-wrap {
+      box-shadow: none; border: 1px solid #ccc; break-inside: avoid;
+    }
+    section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="title">
+    <h1>local-ai-server</h1>
+    <div class="sub">
+      A self-hosted gateway that turns a Mac Studio into an OpenAI-compatible
+      AI server. This walkthrough explains what the project does, how its
+      components fit together, and what each version delivers — no prior
+      context required.
+    </div>
+  </div>
+  <div class="meta">
+    <div>walkthrough · <strong>v1.0</strong></div>
+    <div>last updated <strong>2026-06-19</strong></div>
+    <div class="repo">docs/project-walkthrough.html</div>
+  </div>
+</header>
+
+<!-- TOC -->
+<nav class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#what">What is this project?</a></li>
+    <li><a href="#mental-model">Mental model</a></li>
+    <li><a href="#architecture">System architecture</a></li>
+    <li><a href="#components">Components, in detail</a></li>
+    <li><a href="#flows">Request lifecycles</a></li>
+    <li><a href="#versions">Version walkthrough</a></li>
+    <li><a href="#deferred">What's deferred and why</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ol>
+</nav>
+
+<!-- Stats -->
+<div class="glance">
+  <div class="stat">
+    <div class="v">3 backends</div>
+    <div class="k">Ollama · MLX · Docker Model Runner</div>
+  </div>
+  <div class="stat">
+    <div class="v">1 API surface</div>
+    <div class="k">OpenAI v1 (drop-in for any SDK)</div>
+  </div>
+  <div class="stat">
+    <div class="v">4 versions</div>
+    <div class="k">v0.1.0 shipped · v0.2.0 → v0.4.0+ planned</div>
+  </div>
+  <div class="stat">
+    <div class="v">~50 days</div>
+    <div class="k">total estimated effort to v0.4.0</div>
+  </div>
+</div>
+
+<!-- 01 What is this project? -->
+<section id="what">
+  <h2><span class="num">01</span>What is this project?</h2>
+  <p class="lede">
+    <strong>local-ai-server</strong> is a single HTTP endpoint that lets any
+    OpenAI SDK client (Python, Node, LangChain, your custom app) talk to
+    local LLMs running on a Mac Studio — with zero code changes from the
+    client side.
+  </p>
+
+  <p>
+    OpenAI's SDK speaks one specific HTTP shape:
+    <code>POST /v1/chat/completions</code>, <code>POST /v1/embeddings</code>,
+    etc. Most local model runners (Ollama, MLX, Docker Model Runner) speak
+    something close to that shape but with quirks. This project is a small
+    FastAPI app that:
+  </p>
+  <ol>
+    <li>Receives OpenAI-shaped requests on a single LAN endpoint.</li>
+    <li>Looks up which backend should handle the request.</li>
+    <li>Forwards the call, passes the response back (streaming or not).</li>
+    <li>Translates errors into the OpenAI envelope so SDK clients understand them.</li>
+  </ol>
+
+  <p>
+    From the client's perspective, only two things change versus the real OpenAI:
+    the <code>base_url</code> points at your Mac Studio, and the
+    <code>api_key</code> is one you minted locally. Everything else — model names,
+    streaming, tool calls, embeddings — works as it would against the cloud.
+  </p>
+</section>
+
+<!-- 02 Mental model -->
+<section id="mental-model">
+  <h2><span class="num">02</span>Mental model</h2>
+  <p class="lede">
+    Before the architecture, here's a plain-language analogy that makes the
+    pieces stick.
+  </p>
+
+  <div class="mental">
+    <h3>The coffee shop</h3>
+    <p>
+      The project is a coffee shop. Customers (your apps) walk in and place
+      orders in a standard format — they expect to say "a latte with oat milk"
+      and get a latte. Different baristas (model backends) work in the back:
+      one is great at espresso, another at filter coffee, a third at smoothies.
+      The customer never meets the barista directly.
+    </p>
+    <p>
+      The <strong>front counter</strong> (the FastAPI gateway) takes the order,
+      writes it on a slip, and walks to the right barista. A
+      <strong>menu board</strong> (<code>config/models.yaml</code>) tells the
+      front counter which drink each barista can make. Three baristas are on
+      staff: Ollama (working), MLX (training, doesn't take orders yet), and
+      Docker Model Runner (also training).
+    </p>
+    <p>
+      Over four versions, the shop adds: a <em>door with a key card</em>
+      (auth — v0.2.0), a <em>diary</em> for what happens
+      (logging — v0.2.0), a <em>"we're open" sign</em> that checks each barista
+      (<code>/readyz</code> — v0.2.0), an <em>actual storefront with a lock</em>
+      (Caddy + TLS — v0.3.0), and finally <em>fully trained</em> backup baristas
+      (real MLX + DMR adapters — v0.4.0+).
+    </p>
+  </div>
+</section>
+
+<!-- 03 Architecture -->
+<section id="architecture">
+  <h2><span class="num">03</span>System architecture</h2>
+  <p class="lede">
+    Every component, color-coded by which version delivers or extends it.
+    Green = shipped (v0.1.0). Amber = in-progress (v0.2.0). Slate = planned
+    (v0.3.0+).
+  </p>
+
+  <div class="arch-diag">
+    <div class="arch-row r1">
+      <div class="lbl">Network edge (LAN)</div>
+      <div class="box accent">
+        <div class="t">LAN client <span class="ver">any</span></div>
+        <div class="d">Python/Node/LangChain, etc. Speaks OpenAI v1 over HTTPS or HTTP.</div>
+      </div>
+    </div>
+
+    <div class="arch-row r3">
+      <div class="lbl">Inbound (deferred)</div>
+      <div class="box pending">
+        <div class="t">Caddy reverse proxy <span class="ver">v0.3.0</span></div>
+        <div class="d">TLS termination via <code>tls internal</code>; binds to LAN IP only.</div>
+      </div>
+      <div class="box pending">
+        <div class="t">CORS allowlist <span class="ver">v0.3.0</span></div>
+        <div class="d">Browser origin gate; default deny.</div>
+      </div>
+      <div class="box pending">
+        <div class="t">macOS firewall rule <span class="ver">v0.3.0</span></div>
+        <div class="d">Documented, not coded. Inbound 443 on LAN-only.</div>
+      </div>
+    </div>
+
+    <div class="arch-row r3">
+      <div class="lbl">Auth + observability</div>
+      <div class="box active">
+        <div class="t">Bearer middleware <span class="ver">v0.2.0</span></div>
+        <div class="d">Argon2id verify; touches <code>last_used_at</code>; 401 on miss.</div>
+      </div>
+      <div class="box active">
+        <div class="t">SQLite key store <span class="ver">v0.2.0</span></div>
+        <div class="d"><code>prefix</code> PK + Argon2id hash + revoked_at. Mint via CLI.</div>
+      </div>
+      <div class="box active">
+        <div class="t">structlog JSON logging <span class="ver">v0.2.0</span></div>
+        <div class="d">Per-request fields; <code>Authorization</code> redacted globally.</div>
+      </div>
+    </div>
+
+    <div class="arch-row r1">
+      <div class="lbl">Gateway (FastAPI)</div>
+      <div class="box done">
+        <div class="t">app/main.py · lifespan + router mount <span class="ver">v0.1.0</span></div>
+        <div class="d">
+          Loads <code>config/models.yaml</code> on startup (synchronously).
+          Builds adapter dict via <code>build_adapters()</code>. Mounts
+          <code>/healthz</code>, <code>/v1/models</code>,
+          <code>/v1/chat/completions</code>, <code>/v1/embeddings</code>.
+          Closes httpx clients on shutdown.
+          v0.2.0 adds: <code>/readyz</code>, watchfiles hot-reload of
+          <code>models.yaml</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-row r4">
+      <div class="lbl">Routers (request handlers)</div>
+      <div class="box done">
+        <div class="t">/healthz <span class="ver">v0.1.0</span></div>
+        <div class="d">Public liveness probe. Always 200.</div>
+      </div>
+      <div class="box done">
+        <div class="t">/v1/models <span class="ver">v0.1.0</span></div>
+        <div class="d">Lists registry as OpenAI-shape objects.</div>
+      </div>
+      <div class="box done">
+        <div class="t">/v1/chat/completions <span class="ver">v0.1.0</span></div>
+        <div class="d">Capability + tools gate; SSE stream branch.</div>
+      </div>
+      <div class="box done">
+        <div class="t">/v1/embeddings <span class="ver">v0.1.0</span></div>
+        <div class="d">Capability gate (<code>embeddings</code>).</div>
+      </div>
+    </div>
+
+    <div class="arch-row r2">
+      <div class="lbl">Core abstractions</div>
+      <div class="box done">
+        <div class="t">Registry <span class="ver">v0.1.0</span></div>
+        <div class="d">
+          <code>config/models.yaml</code> → frozen <code>Model</code> entries.
+          O(1) lookup by id. Capability enum: chat | embeddings | tools.
+          v0.2.0 adds atomic hot-reload via watchfiles.
+        </div>
+      </div>
+      <div class="box done">
+        <div class="t">BackendAdapter ABC <span class="ver">v0.1.0</span></div>
+        <div class="d">
+          The routing seam. Four async methods: <code>chat_completions</code>,
+          <code>embeddings</code>, <code>health</code>, <code>close</code>.
+          <code>NotSupportedError</code> raised by stubs → HTTP 501.
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-row r3">
+      <div class="lbl">Adapters (per-backend)</div>
+      <div class="box done">
+        <div class="t">OllamaAdapter <span class="ver">v0.1.0</span></div>
+        <div class="d">
+          Real httpx implementation. SSE streaming via
+          <code>aiter_raw()</code> + try/finally for cancel safety.
+          Long-lived <code>AsyncClient</code>.
+        </div>
+      </div>
+      <div class="box pending">
+        <div class="t">MLXAdapter <span class="ver">v0.4.0+</span></div>
+        <div class="d">
+          501 stub today; real wiring lands in v0.4.0+. Single-model-per-process
+          design (one MLX server per port).
+        </div>
+      </div>
+      <div class="box pending">
+        <div class="t">DockerModelRunnerAdapter <span class="ver">v0.4.0+</span></div>
+        <div class="d">
+          501 stub today. Real wiring uses Docker Desktop's
+          <code>model-runner.docker.internal</code> hostname.
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-row r3">
+      <div class="lbl">Backends (host-native — never containerized)</div>
+      <div class="box done">
+        <div class="t">Ollama process <span class="ver">live</span></div>
+        <div class="d">Listens on <code>:11434</code>. macOS app or <code>ollama serve</code>.</div>
+      </div>
+      <div class="box pending">
+        <div class="t">mlx_lm.server <span class="ver">v0.4.0+</span></div>
+        <div class="d">One process per model. Apple Metal-backed. No Linux wheels.</div>
+      </div>
+      <div class="box pending">
+        <div class="t">Docker Model Runner <span class="ver">v0.4.0+</span></div>
+        <div class="d">Built into Docker Desktop. llama.cpp internally.</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Why backends run on the host (not in containers)</h3>
+  <p>
+    Apple Metal — the GPU API the Mac uses for fast inference — cannot be
+    accessed from inside Docker Desktop on macOS. Docker on Mac runs Linux
+    containers in a VM with no GPU passthrough. So:
+  </p>
+  <ul>
+    <li><strong>Ollama in a container</strong> on Mac would fall back to CPU and run dramatically slower than native.</li>
+    <li><strong>MLX in a container</strong> can't run at all — it's Mac-only and built on Metal.</li>
+    <li><strong>Docker Model Runner</strong> is itself a Docker Desktop feature; it lives outside normal containers.</li>
+  </ul>
+  <p>
+    The gateway and Caddy <em>do</em> run in containers (v0.3.0+) and reach
+    the host backends via Docker's <code>host.docker.internal</code> hostname.
+    This split — light infrastructure containerized, heavy compute host-native —
+    is the load-bearing constraint that shaped the entire design.
+  </p>
+</section>
+
+<!-- 04 Components -->
+<section id="components">
+  <h2><span class="num">04</span>Components, in detail</h2>
+  <p class="lede">
+    Each box in the architecture diagram, explained in 3–4 sentences with
+    its inputs, outputs, and which version delivers it.
+  </p>
+
+  <div class="components">
+
+    <div class="card done">
+      <h3>Gateway · FastAPI app <span class="pill done"><span class="dot"></span>v0.1.0</span></h3>
+      <div class="desc">The translator between OpenAI v1 and your local model runners.</div>
+      <h4>What it does</h4>
+      <ul>
+        <li>Accepts OpenAI-shaped requests (chat, embeddings, models list).</li>
+        <li>Mounts routes; runs lifespan startup (registry load, adapter build) and shutdown (httpx client close).</li>
+        <li>Installs the OpenAI-compatible error envelope handlers globally.</li>
+      </ul>
+      <h4>Where it lives</h4>
+      <ul>
+        <li><code>app/main.py</code>, <code>app/__init__.py</code></li>
+      </ul>
+    </div>
+
+    <div class="card done">
+      <h3>Registry <span class="pill done"><span class="dot"></span>v0.1.0</span></h3>
+      <div class="desc">The menu board: which model id maps to which backend, with what capabilities.</div>
+      <h4>What it does</h4>
+      <ul>
+        <li>Loads <code>config/models.yaml</code> at startup into frozen <code>Model</code> entries.</li>
+        <li>O(1) lookup by gateway-side model id (e.g. <code>ollama-llama3</code>).</li>
+        <li>Validates capabilities (<code>chat</code>, <code>embeddings</code>, <code>tools</code>) and rejects duplicates.</li>
+        <li>v0.2.0 adds atomic hot-reload via <code>watchfiles</code>.</li>
+      </ul>
+      <h4>Where it lives</h4>
+      <ul>
+        <li><code>app/registry.py</code>, <code>config/models.yaml</code></li>
+      </ul>
+    </div>
+
+    <div class="card done">
+      <h3>BackendAdapter ABC <span class="pill done"><span class="dot"></span>v0.1.0</span></h3>
+      <div class="desc">The routing seam. Every backend implements four async methods; the rest of the gateway never sees backend-specific details.</div>
+      <h4>The contract</h4>
+      <ul>
+        <li><code>chat_completions(body, stream)</code> — returns dict (non-stream) or async iterator (stream).</li>
+        <li><code>embeddings(body)</code> — returns dict.</li>
+        <li><code>health()</code> — returns <code>{"status": "ok" | "unreachable"}</code>; never raises.</li>
+        <li><code>close()</code> — releases httpx client; called on shutdown.</li>
+      </ul>
+      <h4>Where it lives</h4>
+      <ul>
+        <li><code>app/adapters/base.py</code></li>
+      </ul>
+    </div>
+
+    <div class="card done">
+      <h3>OllamaAdapter <span class="pill done"><span class="dot"></span>v0.1.0</span></h3>
+      <div class="desc">The only fully-wired backend in v0.1.0. Talks to a host-native Ollama process.</div>
+      <h4>How it works</h4>
+      <ul>
+        <li>Long-lived <code>httpx.AsyncClient</code> built once at startup.</li>
+        <li>Non-stream chat: a single POST, returns parsed JSON.</li>
+        <li>Stream chat: <code>client.stream("POST", ...)</code> + <code>aiter_raw()</code> + try/finally to close the upstream connection cleanly on cancellation.</li>
+        <li>Embeddings: passthrough POST.</li>
+        <li>Health: GET <code>/api/tags</code> with non-raising error handling.</li>
+      </ul>
+      <h4>Where it lives</h4>
+      <ul>
+        <li><code>app/adapters/ollama.py</code></li>
+      </ul>
+    </div>
+
+    <div class="card pending">
+      <h3>MLXAdapter (stub) <span class="pill pending"><span class="dot"></span>v0.4.0+</span></h3>
+      <div class="desc">Returns HTTP 501 on every method in v0.1.0 to lock the routing seam without committing to MLX implementation details.</div>
+      <h4>Why a stub now</h4>
+      <ul>
+        <li>Validates the <code>BackendAdapter</code> ABC contract.</li>
+        <li>Lets the registry, factory, and routers be tested with multiple backend types.</li>
+        <li>v0.4.0+ replaces the bodies; no other code changes.</li>
+      </ul>
+      <h4>Where it lives</h4>
+      <ul>
+        <li><code>app/adapters/mlx.py</code></li>
+      </ul>
+    </div>
+
+    <div class="card pending">
+      <h3>DockerModelRunnerAdapter (stub) <span class="pill pending"><span class="dot"></span>v0.4.0+</span></h3>
+      <div class="desc">Same stub pattern as MLX. Returns 501; real wiring uses Docker Desktop's internal hostname.</div>
+      <h4>Where it lives</h4>
+      <ul>
+        <li><code>app/adapters/docker_model_runner.py</code></li>
+      </ul>
+    </div>
+
+    <div class="card done">
+      <h3>Routers <span class="pill done"><span class="dot"></span>v0.1.0</span></h3>
+      <div class="desc">Four FastAPI routers that translate the request, call the adapter, and shape the response.</div>
+      <h4>The set</h4>
+      <ul>
+        <li><code>health.py</code> — <code>GET /healthz</code>, public, always 200.</li>
+        <li><code>models.py</code> — <code>GET /v1/models</code>, lists the registry.</li>
+        <li><code>chat.py</code> — <code>POST /v1/chat/completions</code>; capability + tools gate; SSE branch.</li>
+        <li><code>embeddings.py</code> — <code>POST /v1/embeddings</code>; embeddings capability gate.</li>
+      </ul>
+    </div>
+
+    <div class="card done">
+      <h3>Error envelope <span class="pill done"><span class="dot"></span>v0.1.0</span></h3>
+      <div class="desc">All errors emerge as the OpenAI-compatible JSON shape so SDK clients can parse them uniformly.</div>
+      <h4>Standard shape</h4>
+      <pre><code>{"error": {
+    "type": "not_supported",
+    "message": "Backend 'mlx' does not support embeddings",
+    "param": "model",
+    "code": "backend_capability_missing"
+}}</code></pre>
+      <h4>Where it lives</h4>
+      <ul>
+        <li><code>app/errors.py</code></li>
+      </ul>
+    </div>
+
+    <div class="card active">
+      <h3>Auth middleware <span class="pill active"><span class="dot"></span>v0.2.0</span></h3>
+      <div class="desc">Bearer-token gate on every <code>/v1/*</code> route. Public paths (<code>/healthz</code>, <code>/readyz</code>, <code>/docs</code>) bypass.</div>
+      <h4>Verification flow</h4>
+      <ul>
+        <li>Extract <code>Authorization: Bearer sk-local-...</code>.</li>
+        <li>Look up the 12-char prefix in SQLite (O(1)).</li>
+        <li>Argon2id-verify the full key against the stored hash.</li>
+        <li>Touch <code>last_used_at</code> async; pass through.</li>
+        <li>On miss / revoked / mismatch: HTTP 401 with the OpenAI envelope.</li>
+      </ul>
+      <h4>Where it lives</h4>
+      <ul>
+        <li><code>app/auth.py</code>, <code>scripts/{generate,revoke}_api_key.py</code></li>
+      </ul>
+    </div>
+
+    <div class="card active">
+      <h3>structlog observability <span class="pill active"><span class="dot"></span>v0.2.0</span></h3>
+      <div class="desc">Structured JSON logging replaces stdlib <code>logging</code> everywhere.</div>
+      <h4>Per-request fields</h4>
+      <ul>
+        <li><code>key_prefix</code>, <code>model</code>, <code>backend</code>, <code>stream</code>, <code>status</code>, <code>latency_ms</code>, <code>prompt_tokens</code>, <code>completion_tokens</code>.</li>
+        <li><code>Authorization</code> header redacted globally — never appears in logs.</li>
+      </ul>
+    </div>
+
+    <div class="card active">
+      <h3>/readyz <span class="pill active"><span class="dot"></span>v0.2.0</span></h3>
+      <div class="desc">Smarter health check: pings each adapter's <code>health()</code> and reports per-backend status.</div>
+      <h4>Behavior</h4>
+      <ul>
+        <li>Public (no auth required).</li>
+        <li>Returns 200 if any backend is reachable; payload lists per-backend.</li>
+        <li>The seam already exists in v0.1.0 (<code>BackendAdapter.health()</code>) — v0.2.0 just composes it.</li>
+      </ul>
+    </div>
+
+    <div class="card active">
+      <h3>watchfiles hot-reload <span class="pill active"><span class="dot"></span>v0.2.0</span></h3>
+      <div class="desc">Mutating <code>config/models.yaml</code> takes effect within ~1s without a process restart.</div>
+      <h4>How it works</h4>
+      <ul>
+        <li>Async task watches the YAML file.</li>
+        <li>On change: re-parse + validate. If valid, atomically swap <code>app.state.registry</code>.</li>
+        <li>In-flight requests use whichever copy was active at entry.</li>
+        <li><strong>Limitation</strong>: only existing backend types. Adding a new type still needs v0.4.0+ runtime adapter construction.</li>
+      </ul>
+    </div>
+
+    <div class="card pending">
+      <h3>Caddy reverse proxy <span class="pill pending"><span class="dot"></span>v0.3.0</span></h3>
+      <div class="desc">TLS termination + LAN-only binding. Uses <code>tls internal</code> for a self-signed cert via Caddy's local CA.</div>
+      <h4>Why Caddy</h4>
+      <ul>
+        <li>Auto-renews internal certs; minimal config.</li>
+        <li>Handles SSE buffering correctly with <code>flush_interval -1</code>.</li>
+        <li>Binds explicitly to <code>${LAN_IP}:443</code>, never <code>0.0.0.0</code>.</li>
+      </ul>
+    </div>
+
+    <div class="card pending">
+      <h3>Containerization (Dockerfile + Compose) <span class="pill pending"><span class="dot"></span>v0.3.0</span></h3>
+      <div class="desc">Gateway and Caddy ship as containers; backends stay host-native.</div>
+      <h4>Container topology</h4>
+      <ul>
+        <li><code>compose.yaml</code> with two services (gateway, caddy).</li>
+        <li>Gateway has no published ports — only Caddy reaches it on the internal Docker network.</li>
+        <li><code>extra_hosts</code> maps <code>host.docker.internal</code> for backend reach.</li>
+        <li>Volumes for the SQLite key store and Caddy data.</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<!-- 05 Request lifecycles -->
+<section id="flows">
+  <h2><span class="num">05</span>Request lifecycles</h2>
+  <p class="lede">
+    Two diagrams: a non-streaming chat completion (the simple case) and a
+    streaming one with SSE (the load-bearing one).
+  </p>
+
+  <h3>Chat completion — non-streaming (<code>stream=false</code>)</h3>
+  <div class="svg-wrap">
+    <svg viewBox="0 0 760 320" role="img" aria-label="Non-streaming chat completion sequence">
+      <style>
+        .col-line { stroke: #6b7785; stroke-width: 1; stroke-dasharray: 3 3; opacity: .5; }
+        .actor-box { fill: var(--panel-2, #1d242e); stroke: var(--border, #2a323d); stroke-width: 1; rx: 6; }
+        .actor-text { font: 600 12px -apple-system, sans-serif; fill: var(--text, #e2e8ee); }
+        .arrow { stroke: var(--accent, #60a5fa); stroke-width: 1.5; fill: none; marker-end: url(#arrowhead); }
+        .arrow.back { stroke: var(--done, #34d399); }
+        .step-text { font: 500 11px -apple-system, sans-serif; fill: var(--text, #e2e8ee); }
+        .note { font: 400 10.5px -apple-system, sans-serif; fill: var(--muted, #8a96a4); font-style: italic; }
+      </style>
+      <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="currentColor" />
+        </marker>
+      </defs>
+
+      <!-- Actor columns -->
+      <rect x="20" y="20" width="100" height="32" class="actor-box" />
+      <text x="70" y="40" text-anchor="middle" class="actor-text">Client SDK</text>
+      <line x1="70" y1="52" x2="70" y2="290" class="col-line" />
+
+      <rect x="160" y="20" width="100" height="32" class="actor-box" />
+      <text x="210" y="40" text-anchor="middle" class="actor-text">/v1/chat/completions</text>
+      <line x1="210" y1="52" x2="210" y2="290" class="col-line" />
+
+      <rect x="320" y="20" width="100" height="32" class="actor-box" />
+      <text x="370" y="40" text-anchor="middle" class="actor-text">Registry</text>
+      <line x1="370" y1="52" x2="370" y2="290" class="col-line" />
+
+      <rect x="480" y="20" width="100" height="32" class="actor-box" />
+      <text x="530" y="40" text-anchor="middle" class="actor-text">OllamaAdapter</text>
+      <line x1="530" y1="52" x2="530" y2="290" class="col-line" />
+
+      <rect x="630" y="20" width="100" height="32" class="actor-box" />
+      <text x="680" y="40" text-anchor="middle" class="actor-text">Ollama :11434</text>
+      <line x1="680" y1="52" x2="680" y2="290" class="col-line" />
+
+      <!-- Steps -->
+      <line x1="70" y1="80" x2="210" y2="80" class="arrow" style="color: var(--accent, #60a5fa);" />
+      <text x="140" y="74" text-anchor="middle" class="step-text">POST {model: ollama-llama3, ...}</text>
+
+      <line x1="210" y1="115" x2="370" y2="115" class="arrow" style="color: var(--accent, #60a5fa);" />
+      <text x="290" y="109" text-anchor="middle" class="step-text">registry.get("ollama-llama3")</text>
+
+      <line x1="370" y1="135" x2="210" y2="135" class="arrow back" style="color: var(--done, #34d399);" />
+      <text x="290" y="150" text-anchor="middle" class="note">Model(backend="ollama", upstream="llama3.1:8b")</text>
+
+      <text x="210" y="175" text-anchor="middle" class="note">Capability + tools gates</text>
+
+      <line x1="210" y1="200" x2="530" y2="200" class="arrow" style="color: var(--accent, #60a5fa);" />
+      <text x="370" y="194" text-anchor="middle" class="step-text">adapter.chat_completions(body, stream=False)</text>
+
+      <line x1="530" y1="225" x2="680" y2="225" class="arrow" style="color: var(--accent, #60a5fa);" />
+      <text x="605" y="219" text-anchor="middle" class="step-text">httpx POST /v1/chat/completions</text>
+
+      <line x1="680" y1="250" x2="530" y2="250" class="arrow back" style="color: var(--done, #34d399);" />
+      <text x="605" y="265" text-anchor="middle" class="note">JSON body</text>
+
+      <line x1="530" y1="280" x2="70" y2="280" class="arrow back" style="color: var(--done, #34d399);" />
+      <text x="300" y="295" text-anchor="middle" class="note">200 OK · ChatCompletionResponse</text>
+    </svg>
+  </div>
+
+  <h3>Chat completion — streaming (<code>stream=true</code>) with SSE</h3>
+  <div class="svg-wrap">
+    <svg viewBox="0 0 760 360" role="img" aria-label="Streaming chat completion with SSE">
+      <style>
+        .col-line2 { stroke: #6b7785; stroke-width: 1; stroke-dasharray: 3 3; opacity: .5; }
+        .actor-box2 { fill: var(--panel-2, #1d242e); stroke: var(--border, #2a323d); stroke-width: 1; rx: 6; }
+        .actor-text2 { font: 600 12px -apple-system, sans-serif; fill: var(--text, #e2e8ee); }
+        .arrow2 { stroke: var(--accent, #60a5fa); stroke-width: 1.5; fill: none; marker-end: url(#arrowhead2); }
+        .arrow2.back { stroke: var(--done, #34d399); }
+        .arrow2.stream { stroke: var(--active, #fbbf24); stroke-width: 1.5; }
+        .step-text2 { font: 500 11px -apple-system, sans-serif; fill: var(--text, #e2e8ee); }
+        .note2 { font: 400 10.5px -apple-system, sans-serif; fill: var(--muted, #8a96a4); font-style: italic; }
+      </style>
+      <defs>
+        <marker id="arrowhead2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="currentColor" />
+        </marker>
+      </defs>
+
+      <rect x="20" y="20" width="100" height="32" class="actor-box2" />
+      <text x="70" y="40" text-anchor="middle" class="actor-text2">Client SDK</text>
+      <line x1="70" y1="52" x2="70" y2="340" class="col-line2" />
+
+      <rect x="160" y="20" width="100" height="32" class="actor-box2" />
+      <text x="210" y="40" text-anchor="middle" class="actor-text2">/v1/chat/completions</text>
+      <line x1="210" y1="52" x2="210" y2="340" class="col-line2" />
+
+      <rect x="320" y="20" width="100" height="32" class="actor-box2" />
+      <text x="370" y="40" text-anchor="middle" class="actor-text2">StreamingResponse</text>
+      <line x1="370" y1="52" x2="370" y2="340" class="col-line2" />
+
+      <rect x="480" y="20" width="100" height="32" class="actor-box2" />
+      <text x="530" y="40" text-anchor="middle" class="actor-text2">_stream() async gen</text>
+      <line x1="530" y1="52" x2="530" y2="340" class="col-line2" />
+
+      <rect x="630" y="20" width="100" height="32" class="actor-box2" />
+      <text x="680" y="40" text-anchor="middle" class="actor-text2">Ollama :11434</text>
+      <line x1="680" y1="52" x2="680" y2="340" class="col-line2" />
+
+      <line x1="70" y1="80" x2="210" y2="80" class="arrow2" style="color: var(--accent, #60a5fa);" />
+      <text x="140" y="74" text-anchor="middle" class="step-text2">POST {stream: true, ...}</text>
+
+      <text x="210" y="105" text-anchor="middle" class="note2">Gates pass; build StreamingResponse</text>
+
+      <line x1="210" y1="130" x2="370" y2="130" class="arrow2" style="color: var(--accent, #60a5fa);" />
+      <text x="290" y="124" text-anchor="middle" class="step-text2">return iterator</text>
+
+      <line x1="370" y1="155" x2="530" y2="155" class="arrow2" style="color: var(--accent, #60a5fa);" />
+      <text x="450" y="149" text-anchor="middle" class="step-text2">async for chunk in _stream()</text>
+
+      <line x1="530" y1="180" x2="680" y2="180" class="arrow2" style="color: var(--accent, #60a5fa);" />
+      <text x="605" y="174" text-anchor="middle" class="step-text2">client.stream("POST", ...)</text>
+
+      <!-- Streaming chunks loop -->
+      <line x1="680" y1="210" x2="530" y2="210" class="arrow2 stream" style="color: var(--active, #fbbf24);" />
+      <text x="605" y="225" text-anchor="middle" class="note2">data: {"delta": ...}</text>
+
+      <line x1="530" y1="240" x2="70" y2="240" class="arrow2 stream" style="color: var(--active, #fbbf24);" />
+      <text x="300" y="255" text-anchor="middle" class="note2">SSE chunk verbatim (aiter_raw)</text>
+
+      <line x1="680" y1="275" x2="530" y2="275" class="arrow2 stream" style="color: var(--active, #fbbf24);" />
+      <text x="605" y="290" text-anchor="middle" class="note2">... (more chunks)</text>
+
+      <line x1="680" y1="310" x2="70" y2="310" class="arrow2 back" style="color: var(--done, #34d399);" />
+      <text x="380" y="325" text-anchor="middle" class="note2">data: [DONE]\n\n · upstream Response.aclose() runs in finally</text>
+    </svg>
+  </div>
+
+  <p>
+    <strong>The streaming flow's load-bearing trick</strong>: returning the
+    <em>iterator</em> (not the awaited response) from the adapter means
+    Starlette's <code>StreamingResponse</code> drives the upstream connection
+    only when it pulls chunks. A <code>try/finally</code> around the
+    <code>aiter_raw()</code> loop guarantees the upstream connection closes
+    on cancellation (browser disconnect, client timeout) — preventing leaks
+    when the client gives up mid-stream.
+  </p>
+</section>
+
+<!-- 06 Version walkthrough -->
+<section id="versions">
+  <h2><span class="num">06</span>Version walkthrough</h2>
+  <p class="lede">
+    Each version layers on top of the last. Capabilities only grow; nothing
+    is reworked. Below: scope, deliverables, key concepts, and the practical
+    "after this version, you can…" outcome.
+  </p>
+
+  <!-- Roadmap timeline -->
+  <div class="timeline">
+    <div class="tl-card done">
+      <div class="ver">v0.1.0 <span class="pill done"><span class="dot"></span>shipped</span></div>
+      <div class="scope">Skeleton + Ollama path; MLX/DMR stubbed at 501.</div>
+      <div class="effort">~13 days</div>
+    </div>
+    <div class="tl-card active">
+      <div class="ver">v0.2.0 <span class="pill active"><span class="dot"></span>planning</span></div>
+      <div class="scope">Auth + Observability — Argon2id keys, structlog, /readyz, hot-reload.</div>
+      <div class="effort">~13 days</div>
+    </div>
+    <div class="tl-card pending">
+      <div class="ver">v0.3.0 <span class="pill pending"><span class="dot"></span>planned</span></div>
+      <div class="scope">Containers + TLS — Caddy, compose.yaml, Dockerfile.gateway, LAN binding.</div>
+      <div class="effort">~8–12 days</div>
+    </div>
+    <div class="tl-card pending">
+      <div class="ver">v0.4.0+ <span class="pill pending"><span class="dot"></span>planned</span></div>
+      <div class="scope">Real MLX + DMR adapters; Makefile for host-backend lifecycle.</div>
+      <div class="effort">~12–18 days</div>
+    </div>
+  </div>
+
+  <!-- v0.1.0 -->
+  <div class="version-block done">
+    <h3>v0.1.0 — Skeleton + Ollama path
+      <span class="pill done"><span class="dot"></span>shipped 2026-06-18</span>
+      <span class="pill accent">PR #1</span>
+    </h3>
+    <p class="goal">
+      Prove the architecture end-to-end with one real backend. MLX and Docker
+      Model Runner exist as 501 stubs to lock the routing seam.
+    </p>
+    <div class="grid2">
+      <div class="col">
+        <h4>Delivered</h4>
+        <ul>
+          <li>FastAPI app with lifespan startup, error handlers, and 4 routers.</li>
+          <li><code>BackendAdapter</code> ABC with <code>NotSupportedError</code> exception.</li>
+          <li><code>OllamaAdapter</code> fully wired — chat (stream + non-stream), embeddings, health.</li>
+          <li><code>MLXAdapter</code> + <code>DockerModelRunnerAdapter</code> stubs raising 501.</li>
+          <li>Registry loader (one-shot at startup; no hot-reload yet).</li>
+          <li>Capability gate (CHAT-first ordering) and tools gate.</li>
+          <li>61 tests, project-mode <code>ruff</code> clean, demo notebook.</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h4>Key concepts introduced</h4>
+        <ul>
+          <li><strong>OpenAI-compatible</strong> wire format — clients work unchanged.</li>
+          <li><strong>The routing seam</strong> — every backend behind one ABC.</li>
+          <li><strong>SSE streaming with cancel-safety</strong> via <code>aiter_raw</code> + try/finally.</li>
+          <li><strong>Error envelope</strong> — uniform JSON shape for all failures.</li>
+          <li><strong>Capability gating</strong> — registry decides what each model can do.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="outcome">
+      <strong>After v0.1.0 you can:</strong> point any OpenAI SDK client at
+      <code>http://&lt;mac&gt;:8000/v1</code>, list models, run chat completions
+      (streaming or not), and get embeddings — against a host-native Ollama —
+      with no code changes on the client side.
+    </div>
+  </div>
+
+  <!-- v0.2.0 -->
+  <div class="version-block active">
+    <h3>v0.2.0 — Auth + Observability
+      <span class="pill active"><span class="dot"></span>planning</span>
+    </h3>
+    <p class="goal">
+      Harden the LAN-internal seam. Add API-key auth, structured logging,
+      a smarter health probe, and live config reloads.
+    </p>
+    <div class="grid2">
+      <div class="col">
+        <h4>Delivered</h4>
+        <ul>
+          <li>Bearer middleware with Argon2id verify on every <code>/v1/*</code>.</li>
+          <li>SQLite key store with prefix index + revoked timestamps.</li>
+          <li><code>scripts/generate_api_key.py</code> + <code>revoke_api_key.py</code> CLIs.</li>
+          <li><code>structlog</code> JSON logging — <code>Authorization</code> redacted globally.</li>
+          <li><code>GET /readyz</code> — fans out to <code>BackendAdapter.health()</code>.</li>
+          <li><code>watchfiles</code> hot-reload of <code>config/models.yaml</code>.</li>
+          <li>27 carried-forward <code>mypy --strict</code> cleanups.</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h4>Key concepts introduced</h4>
+        <ul>
+          <li><strong>Argon2id</strong> — modern memory-hard password hashing.</li>
+          <li><strong>Prefix-indexed key store</strong> — O(1) lookup before the (slow) hash verify.</li>
+          <li><strong>Structured logging</strong> — JSON-per-line for log aggregators.</li>
+          <li><strong>Per-backend health composition</strong> — partial-degraded service awareness.</li>
+          <li><strong>Atomic config swap</strong> — hot-reload without mid-request inconsistency.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="outcome">
+      <strong>After v0.2.0 you can:</strong> mint one or more API keys, give
+      them to teammates on the LAN, monitor which backends are up via a
+      machine-readable <code>/readyz</code>, parse logs as JSON, and add a
+      new model to <code>models.yaml</code> without restarting the gateway.
+    </div>
+  </div>
+
+  <!-- v0.3.0 -->
+  <div class="version-block pending">
+    <h3>v0.3.0 — Containers + TLS + LAN binding
+      <span class="pill pending"><span class="dot"></span>planned</span>
+    </h3>
+    <p class="goal">
+      Package the gateway and put a real reverse proxy in front. The
+      backends stay host-native; only the gateway and Caddy ship as
+      containers.
+    </p>
+    <div class="grid2">
+      <div class="col">
+        <h4>Delivered</h4>
+        <ul>
+          <li><code>docker/Dockerfile.gateway</code> — slim Python image, uv-managed deps.</li>
+          <li><code>compose.yaml</code> with two services (gateway + caddy).</li>
+          <li><code>caddy/Caddyfile</code> with <code>tls internal</code> + SSE-friendly buffering.</li>
+          <li>Gateway reaches host backends via <code>host.docker.internal</code>.</li>
+          <li>Caddy binds to <code>${LAN_IP}:443</code> only, never <code>0.0.0.0</code>.</li>
+          <li>CORS allowlist; macOS firewall rule documented.</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h4>Key concepts introduced</h4>
+        <ul>
+          <li><strong>Internal CA via Caddy</strong> — self-signed certs without buying a domain.</li>
+          <li><strong>SSE buffering</strong> — Caddy needs <code>flush_interval -1</code> or streams stall.</li>
+          <li><strong><code>host.docker.internal</code></strong> — the canonical Docker-on-Mac escape hatch.</li>
+          <li><strong>Bind-only-to-LAN</strong> — explicit IP binding instead of any-interface.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="outcome">
+      <strong>After v0.3.0 you can:</strong> run the entire gateway with one
+      <code>docker compose up</code>, browse to <code>https://ai.local/v1</code>
+      from any device on your LAN (after trusting Caddy's local cert once),
+      and have nothing accessible from the public internet.
+    </div>
+  </div>
+
+  <!-- v0.4.0+ -->
+  <div class="version-block pending">
+    <h3>v0.4.0+ — Real MLX + DMR + host-side Makefile
+      <span class="pill pending"><span class="dot"></span>planned</span>
+    </h3>
+    <p class="goal">
+      Replace the 501 stubs with real implementations. Add the missing
+      backends and a host-side process manager.
+    </p>
+    <div class="grid2">
+      <div class="col">
+        <h4>Delivered</h4>
+        <ul>
+          <li><code>MLXAdapter</code> wired to <code>mlx_lm.server</code> — one process per model, one port per process.</li>
+          <li><code>DockerModelRunnerAdapter</code> wired to Docker Desktop's <code>model-runner.docker.internal</code>.</li>
+          <li>Registry's per-model <code>base_url</code> becomes load-bearing for multi-MLX.</li>
+          <li><code>Makefile</code> with <code>start-ollama</code>, <code>start-mlx MODEL=... PORT=...</code>, <code>start-model-runner</code>, <code>stop-all</code>.</li>
+          <li>Live integration tests against MLX + DMR; cross-backend smoke tests.</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h4>Key concepts introduced</h4>
+        <ul>
+          <li><strong>Single-model-per-process</strong> (MLX) — multiple instances coordinated via the registry.</li>
+          <li><strong>Tool-call shape variance</strong> — Ollama returns structured <code>tool_calls</code>; MLX returns text inside <code>content</code>; DMR depends on the GGUF chat template.</li>
+          <li><strong>Apple Metal performance</strong> — why these backends had to live host-native from day one.</li>
+          <li><strong>Process-manager-as-Makefile</strong> — keeping host-side ops uncomplicated.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="outcome">
+      <strong>After v0.4.0 you can:</strong> run any combination of Ollama, MLX,
+      and Docker Model Runner backends on the same Mac Studio, point clients at
+      a single endpoint, and route requests by model id without thinking about
+      which engine is behind which model.
+    </div>
+  </div>
+</section>
+
+<!-- 07 Deferred -->
+<section id="deferred">
+  <h2><span class="num">07</span>What's deferred and why</h2>
+  <p class="lede">
+    Each item below was actively considered, then deferred to keep v0.1.0–v0.4.0
+    focused. Most are documented in <a href="spec.md">docs/spec.md §15</a>
+    (Open follow-ups).
+  </p>
+
+  <div class="components">
+    <div class="card pending">
+      <h3>Per-key rate limits / quotas <span class="pill pending"><span class="dot"></span>post-v1</span></h3>
+      <div class="desc">
+        v0.2.0's auth makes individual keys identifiable, but doesn't throttle
+        them. For a small home setup with trusted users, the LAN bottleneck is
+        already the limit. Real rate limiting would need a token bucket per
+        key + a metering store.
+      </div>
+    </div>
+
+    <div class="card pending">
+      <h3>Usage metering / Prometheus metrics <span class="pill pending"><span class="dot"></span>post-v1</span></h3>
+      <div class="desc">
+        Tokens used, requests by model, latency percentiles. structlog logs
+        are enough for ad-hoc analysis; a real metrics endpoint waits for
+        someone to ask for it.
+      </div>
+    </div>
+
+    <div class="card pending">
+      <h3>MLX tool-call normalization <span class="pill pending"><span class="dot"></span>post-v1</span></h3>
+      <div class="desc">
+        MLX returns tool calls as text inside the message content (the model's
+        chat template controls formatting); Ollama and DMR return structured
+        <code>tool_calls</code> arrays. Normalizing across backends is a
+        per-model parsing exercise that's better done after v0.4.0 so you
+        have real outputs to test against.
+      </div>
+    </div>
+
+    <div class="card pending">
+      <h3>Cross-backend embedding fallback <span class="pill pending"><span class="dot"></span>post-v1</span></h3>
+      <div class="desc">
+        Currently the registry binds an embedding to one specific model id.
+        A fallback would let the gateway try a list and silently route to
+        whichever is up. Useful operationally but adds non-trivial behavior
+        the user can't see.
+      </div>
+    </div>
+
+    <div class="card pending">
+      <h3>Public internet exposure / Let's Encrypt <span class="pill pending"><span class="dot"></span>non-goal</span></h3>
+      <div class="desc">
+        The whole point is LAN-only. Caddy in v0.3.0 uses <code>tls internal</code>
+        deliberately. If you need public exposure, that's a different project
+        (and probably needs proper auth + rate limiting + WAF rules first).
+      </div>
+    </div>
+
+    <div class="card pending">
+      <h3>Tailscale option <span class="pill pending"><span class="dot"></span>maybe-future</span></h3>
+      <div class="desc">
+        An alternative to Caddy + LAN binding: drop both, bind to the
+        Tailscale interface, get end-to-end encryption + cross-network access
+        for free. Considered post-v1 for travelers / multi-location users.
+      </div>
+    </div>
+
+    <div class="card pending">
+      <h3>Web UI / multi-tenant admin <span class="pill pending"><span class="dot"></span>non-goal</span></h3>
+      <div class="desc">
+        The CLI scripts (mint key, revoke key) cover the small-team case.
+        A web admin panel would change the security model substantially
+        (browser-based auth, sessions, CSRF) and isn't worth the surface for
+        a self-hosted LAN tool.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 08 Glossary -->
+<section id="glossary">
+  <h2><span class="num">08</span>Glossary</h2>
+  <p class="lede">Terms a newcomer might want a quick definition for.</p>
+
+  <div class="glossary">
+    <dl>
+      <dt>OpenAI v1 API</dt>
+      <dd>The HTTP shape OpenAI publishes — endpoints like
+        <code>/v1/chat/completions</code> with a documented JSON request/
+        response format. Most third-party LLM tools speak this shape now,
+        which is why this project targets it.</dd>
+
+      <dt>SSE (Server-Sent Events)</dt>
+      <dd>A streaming protocol over HTTP. The server sends
+        <code>data: {json}\n\n</code> chunks; the client reads them as they
+        arrive. OpenAI uses SSE for streaming chat completions, terminated
+        by a literal <code>data: [DONE]\n\n</code>.</dd>
+
+      <dt>FastAPI</dt>
+      <dd>The Python web framework the gateway uses. Built on top of
+        Starlette (the actual ASGI server) and pydantic (schema validation).
+        Good fit for OpenAI-shaped APIs because pydantic models map 1:1
+        to the JSON wire format.</dd>
+
+      <dt>Ollama</dt>
+      <dd>A popular LLM runner that exposes models locally. Has a built-in
+        OpenAI-compatible HTTP surface at <code>:11434/v1/...</code>. The
+        only fully-wired backend in v0.1.0.</dd>
+
+      <dt>MLX</dt>
+      <dd>Apple's array library for machine learning, optimized for Apple
+        Silicon (Metal-backed). <code>mlx_lm.server</code> is a tiny HTTP
+        server around a single MLX-loaded model. Runs only on macOS — no
+        Linux wheels exist.</dd>
+
+      <dt>Docker Model Runner</dt>
+      <dd>A Docker Desktop feature (still experimental at the time of writing)
+        that runs LLMs as part of the Docker engine itself. Reachable from
+        containers via <code>model-runner.docker.internal</code>.</dd>
+
+      <dt>Apple Metal</dt>
+      <dd>Apple's GPU API. Critical for fast inference on Mac. Not accessible
+        from Docker Desktop on macOS — which is why the model backends in
+        this project run host-native, not containerized.</dd>
+
+      <dt>Argon2id</dt>
+      <dd>The modern winner of the password-hashing competition. Memory-hard,
+        slow on purpose, resistant to GPU/ASIC attacks. Used in v0.2.0 for
+        API keys. Verification takes ~50ms — fine for a per-request auth
+        gate.</dd>
+
+      <dt>Caddy</dt>
+      <dd>A small web server / reverse proxy. The project uses it for TLS
+        termination via Caddy's built-in local CA (<code>tls internal</code>),
+        which spares you from buying a domain or running Let's Encrypt for
+        a LAN-only service.</dd>
+
+      <dt>structlog</dt>
+      <dd>A Python structured-logging library. Output is JSON-per-line, with
+        per-call key/value fields. Replaces stdlib <code>logging</code> in
+        v0.2.0 so logs can be parsed by tools like jq, Grafana, etc.</dd>
+
+      <dt>watchfiles</dt>
+      <dd>A Rust-backed Python file-watcher. v0.2.0 uses it to detect
+        changes to <code>config/models.yaml</code> and reload the registry
+        without restarting the process.</dd>
+
+      <dt>host.docker.internal</dt>
+      <dd>A special hostname Docker Desktop resolves to the host machine
+        from inside a container. The gateway (in v0.3.0+, containerized)
+        uses it to reach host-native Ollama on <code>:11434</code>.</dd>
+
+      <dt>Capability gate / Tools gate</dt>
+      <dd>Two pre-dispatch checks in the chat router:
+        <em>capability gate</em> verifies the requested model declares the
+        relevant capability (e.g. <code>chat</code> or <code>embeddings</code>);
+        <em>tools gate</em> verifies that if the request includes
+        <code>tools</code>, the model declares <code>tools</code> capability.
+        Both fire <strong>before</strong> any backend call, so invalid
+        requests don't waste compute.</dd>
+
+      <dt>OpenAI error envelope</dt>
+      <dd>The JSON shape OpenAI's API returns for errors:
+        <code>{"error": {"type", "message", "param", "code"}}</code>. The
+        gateway uses this shape for every failure path so SDK clients can
+        parse errors uniformly regardless of backend.</dd>
+
+      <dt>BackendAdapter ABC</dt>
+      <dd>The abstract base class every backend implementation extends.
+        Defines four async methods (<code>chat_completions</code>,
+        <code>embeddings</code>, <code>health</code>, <code>close</code>).
+        The "routing seam" — the rest of the gateway depends on this
+        interface, never on concrete backend types.</dd>
+
+      <dt><code>/readyz</code> vs <code>/healthz</code></dt>
+      <dd><code>/healthz</code> is "is the process alive" (always 200 if
+        anyone answers). <code>/readyz</code> is "is the process ready to
+        serve traffic" — checks dependencies. v0.1.0 only has
+        <code>/healthz</code>; v0.2.0 adds <code>/readyz</code> with
+        per-backend status.</dd>
+    </dl>
+  </div>
+</section>
+
+<footer>
+  <div>local-ai-server · project walkthrough · 2026-06-19</div>
+  <div>
+    <a href="spec.md">spec.md</a> ·
+    <a href="architecture.md">architecture.md</a> ·
+    <a href="api-reference.md">api-reference.md</a> ·
+    <a href="usage-guide.md">usage-guide.md</a> ·
+    <a href="../pm/v0_1_0/status.html">status dashboard</a>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

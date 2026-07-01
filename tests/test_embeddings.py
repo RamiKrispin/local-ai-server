@@ -18,15 +18,19 @@ from fastapi.testclient import TestClient
 
 
 @pytest.mark.live
-def test_embeddings_live_ollama_returns_vector(client: TestClient) -> None:
+def test_embeddings_live_ollama_returns_vector(
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
+) -> None:
     """Single-string input against nomic-embed-text returns a non-empty
     vector with the expected OpenAI embeddings envelope shape.
 
     Vector dimension is asserted as > 0, not == 768, to tolerate model
     variants across Ollama releases.
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/embeddings",
+        headers=auth_headers,
         json={"model": "ollama-nomic-embed", "input": "hello world"},
     )
     assert response.status_code == 200
@@ -47,10 +51,14 @@ def test_embeddings_live_ollama_returns_vector(client: TestClient) -> None:
 
 
 @pytest.mark.live
-def test_embeddings_live_ollama_batch_input(client: TestClient) -> None:
+def test_embeddings_live_ollama_batch_input(
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
+) -> None:
     """Batch input (list of two strings) returns two embedding entries."""
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/embeddings",
+        headers=auth_headers,
         json={
             "model": "ollama-nomic-embed",
             "input": ["hello", "world"],
@@ -71,7 +79,8 @@ def test_embeddings_live_ollama_batch_input(client: TestClient) -> None:
 
 
 def test_embeddings_capability_gate_no_embeddings_returns_501(
-    client: TestClient,
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
 ) -> None:
     """A model with only [chat, tools] returns 501 for embeddings.
 
@@ -79,8 +88,9 @@ def test_embeddings_capability_gate_no_embeddings_returns_501(
 
     Error-path row 4 (phase-3-architecture.md §7).
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/embeddings",
+        headers=auth_headers,
         json={"model": "ollama-llama3", "input": "hello"},
     )
     assert response.status_code == 501
@@ -89,13 +99,17 @@ def test_embeddings_capability_gate_no_embeddings_returns_501(
     assert error["code"] == "backend_capability_missing"
 
 
-def test_embeddings_unknown_model_returns_404(client: TestClient) -> None:
+def test_embeddings_unknown_model_returns_404(
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
+) -> None:
     """Unknown model id → 404 with model_not_found code.
 
     Error-path row 2 (phase-3-architecture.md §7).
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/embeddings",
+        headers=auth_headers,
         json={"model": "does-not-exist", "input": "hello"},
     )
     assert response.status_code == 404
@@ -104,7 +118,8 @@ def test_embeddings_unknown_model_returns_404(client: TestClient) -> None:
 
 
 def test_embeddings_stub_backend_dmr_returns_501(
-    client: TestClient,
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
 ) -> None:
     """model-runner-llama32 declares [embeddings] in the registry, so the
     capability gate passes.  The DMR stub adapter raises
@@ -116,8 +131,9 @@ def test_embeddings_stub_backend_dmr_returns_501(
 
     Error-path row 9 (phase-3-architecture.md §7).
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/embeddings",
+        headers=auth_headers,
         json={"model": "model-runner-llama32", "input": "hello"},
     )
     assert response.status_code == 501
@@ -126,7 +142,8 @@ def test_embeddings_stub_backend_dmr_returns_501(
 
 
 def test_embeddings_stub_backend_mlx_returns_501_via_capability_gate(
-    client: TestClient,
+    client_with_auth: TestClient,
+    auth_headers: dict[str, str],
 ) -> None:
     """mlx-mistral declares only [chat], not [embeddings].  The capability
     gate fires and returns 501 with code='backend_capability_missing'.
@@ -137,8 +154,9 @@ def test_embeddings_stub_backend_mlx_returns_501_via_capability_gate(
 
     Error-path row 10 (phase-3-architecture.md §7).
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/embeddings",
+        headers=auth_headers,
         json={"model": "mlx-mistral", "input": "hello"},
     )
     assert response.status_code == 501

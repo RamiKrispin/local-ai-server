@@ -1,9 +1,11 @@
+from typing import Any, AsyncIterator, cast
+
 from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 
 from app.adapters.base import BackendAdapter, NotSupportedError
 from app.errors import make_error
-from app.registry import Capability, Model
+from app.registry import Capability, Model, Registry
 from app.schemas import ChatCompletionRequest
 
 SSE_HEADERS: dict[str, str] = {
@@ -25,8 +27,8 @@ router = APIRouter(tags=["chat"])
 async def chat_completions(
     body: ChatCompletionRequest,
     request: Request,
-) -> dict | StreamingResponse:
-    registry = request.app.state.registry
+) -> dict[str, Any] | StreamingResponse:
+    registry = cast(Registry, request.app.state.registry)
     adapters: dict[str, BackendAdapter] = (
         request.app.state.adapters
     )
@@ -82,8 +84,8 @@ async def chat_completions(
 
     if body.stream:
         return StreamingResponse(
-            result,
+            cast(AsyncIterator[bytes], result),
             media_type="text/event-stream",
             headers=SSE_HEADERS,
         )
-    return result
+    return cast(dict[str, Any], result)

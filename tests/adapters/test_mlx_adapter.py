@@ -82,15 +82,19 @@ async def test_mlx_close_is_noop() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_mlx_routed_chat_returns_501_with_envelope(client) -> None:
+def test_mlx_routed_chat_returns_501_with_envelope(
+    client_with_auth,
+    auth_headers,
+) -> None:
     """POST /v1/chat/completions with mlx-mistral (chat-capable, no tools)
     returns 501 with the OpenAI error envelope.
 
     The capability gate passes; the adapter raises NotSupportedError which
     the not_supported_handler translates to 501.
     """
-    response = client.post(
+    response = client_with_auth.post(
         "/v1/chat/completions",
+        headers=auth_headers,
         json={
             "model": "mlx-mistral",
             "messages": [{"role": "user", "content": "hi"}],

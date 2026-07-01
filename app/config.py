@@ -32,6 +32,10 @@ class Settings(BaseSettings):
         default="http://localhost:11434",
         alias="OLLAMA_BASE_URL",
     )
+    keys_db_path: Path = Field(
+        default=Path("./data/keys.db"),
+        alias="KEYS_DB_PATH",
+    )
 
 
 @lru_cache(maxsize=1)

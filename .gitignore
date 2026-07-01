@@ -1,4 +1,5 @@
 posts/*.*
+!posts/*.ipynb
 posts/assets/*.*
 # --- local-ai-server v0.1.0 (Phase 3) ---
 config/.env
@@ -11,3 +12,7 @@ __pycache__/
 htmlcov/
 .coverage
 *.egg-info/
+# --- local-ai-server v0.2.0 (Phase 1) ---
+data/
+data/*.db
+data/*.db-journal

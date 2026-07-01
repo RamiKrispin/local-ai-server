@@ -1,6 +1,6 @@
 import logging
 import traceback
-from typing import Any
+from typing import Any, cast
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -101,7 +101,7 @@ async def validation_exception_handler(
     errors = exc.errors()
     param: str | None = None
     if errors:
-        loc = errors[0].get("loc", ())
+        loc = cast(tuple[Any, ...], errors[0].get("loc", ()))
         if loc:
             param = ".".join(str(p) for p in loc)
     message = errors[0].get("msg", "Invalid request") if errors else (
@@ -149,5 +149,5 @@ def install_exception_handlers(app: FastAPI) -> None:
     )
     # Catch-all must be last — order matters in Starlette.
     app.add_exception_handler(
-        Exception, unhandled_exception_handler  # type: ignore[arg-type]
+        Exception, unhandled_exception_handler
     )
