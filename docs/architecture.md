@@ -11,22 +11,14 @@
 > hot-reload), and the `GET /readyz` route.
 
 This document is the public-facing summary of how `local-ai-server`
-v0.2.0 is built. For the deeper module-by-module specifications, see
-the phase architecture documents:
+v0.2.0 is built. For version-level scope and architecture history, see:
 
-- `pm/v0_1_0/phase-1-architecture.md` — skeleton: ABC, registry,
-  schemas, error envelope, lifespan.
-- `pm/v0_1_0/phase-2-architecture.md` — endpoints: wired Ollama
-  adapter, the three `/v1` routers, the adapter factory.
-- `pm/v0_1_0/phase-3-architecture.md` — tests, dev-container deps,
-  README, ruff/`.gitignore` housekeeping.
-- `pm/v0_2_0/phase-1-architecture.md` — auth foundation: SQLite key
-  store, Argon2id verifier, `BearerAuthMiddleware`, mint/revoke CLIs.
-- `pm/v0_2_0/phase-2-architecture.md` — observability: structlog +
-  redaction, `RequestLoggingMiddleware`, `/readyz`, watchfiles
-  hot-reload.
-- `pm/v0_2_0/phase-3-architecture.md` — tests, mypy `--strict`
-  cleanup, README + docker requirements parity.
+- [`v0.1.0-scope-and-architecture.md`](v0.1.0-scope-and-architecture.md)
+  - first gateway slice: ABC, registry, OpenAI-compatible routers,
+  Ollama adapter, SSE passthrough, and 501 stubs.
+- [`v0.2.0-scope-and-architecture.md`](v0.2.0-scope-and-architecture.md)
+  - auth foundation, SQLite key store, Argon2id verification,
+  structlog, request logging, `/readyz`, and registry hot-reload.
 
 The long-term v1 design (Caddy, TLS, container/Compose, host-side
 Makefile, real MLX / Docker Model Runner adapters) lives in
